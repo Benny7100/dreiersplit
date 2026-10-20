@@ -7,23 +7,18 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Training">
 <meta name="theme-color" content="#0d0e10">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;800&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icon-180.png">
 <title>Dreiersplit Training</title>
 <style>
-/* Layout: one narrow column, big touch targets, a timer pinned to the bottom edge. */
 :root {
   color-scheme: dark;
-  --bg: #0d0e10;
-  --surface: #17191c;
-  --surface-2: #202328;
-  --line: #2b2f36;
-  --fg: #f2efe8;
-  --muted: #8d939c;
-  --accent: #ff7a45;
-  --accent-ink: #1a0d06;
-  --ok: #7fd1a8;
-  --danger: #ff7b7b;
+  --bg: #0d0e10; --surface: #17191c; --surface-2: #202328; --line: #2b2f36;
+  --fg: #f2efe8; --muted: #8d939c; --accent: #ff7a45; --accent-ink: #1a0d06;
+  --ok: #7fd1a8; --danger: #ff7b7b;
 }
 @media (prefers-color-scheme: light) {
   :root:not([data-theme="dark"]) {
@@ -40,112 +35,127 @@
 
 html { padding-top: env(safe-area-inset-top, 0px); }
 body {
-  margin: 0;
-  background: var(--bg);
-  color: var(--fg);
+  margin: 0; background: var(--bg); color: var(--fg);
   font: 15px/1.5 "IBM Plex Sans", system-ui, -apple-system, sans-serif;
   padding-left: max(16px, env(safe-area-inset-left, 0px));
   padding-right: max(16px, env(safe-area-inset-right, 0px));
-  padding-bottom: 150px;
+  padding-top: 12px; padding-bottom: 150px;
 }
-main { max-width: 560px; margin: 0 auto; display: grid; gap: 20px; }
-button { font: inherit; color: inherit; cursor: pointer; }
-button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+main { max-width: 560px; margin: 0 auto; display: grid; gap: 18px; }
+button, select, input { font: inherit; color: inherit; }
+button { cursor: pointer; }
+button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 h1, h2 { font-family: "Big Shoulders Display", "Arial Narrow", sans-serif; font-weight: 800; text-wrap: balance; margin: 0; }
-h1 { font-size: 44px; line-height: .95; text-transform: uppercase; letter-spacing: .01em; }
+h1 { font-size: 44px; line-height: .95; text-transform: uppercase; }
 h2 { font-size: 26px; line-height: 1.05; }
 .eyebrow { font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+.muted { color: var(--muted); }
+.small { font-size: 13px; }
 .num { font-variant-numeric: tabular-nums; }
+.row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.between { justify-content: space-between; align-items: flex-start; }
+.visually { position: absolute; width: 1px; height: 1px; overflow: hidden; opacity: 0; pointer-events: none; }
 
-.top { display: flex; justify-content: space-between; align-items: flex-end; gap: 12px; padding-top: 12px; }
+.top { display: flex; justify-content: space-between; align-items: flex-end; gap: 12px; }
 .status { font-size: 12px; color: var(--muted); text-align: right; min-height: 1em; }
+.status[data-state="err"] { color: var(--danger); }
+.status[data-state="ok"] { color: var(--ok); }
+
+.tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 4px; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; }
+.tabs button { min-height: 44px; border: 0; border-radius: 10px; background: transparent; color: var(--muted); font-weight: 600; }
+.tabs button[aria-pressed="true"] { background: var(--surface-2); color: var(--fg); box-shadow: inset 0 0 0 1px var(--line); }
 
 .splits { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
 .split {
-  position: relative; min-height: 64px; padding: 10px 8px; border-radius: 12px;
-  background: var(--surface); border: 1px solid var(--line); text-align: left;
-  display: grid; align-content: space-between; gap: 4px; min-width: 0;
+  position: relative; min-height: 64px; padding: 10px 8px; border-radius: 12px; background: var(--surface);
+  border: 1px solid var(--line); text-align: left; display: grid; align-content: space-between; gap: 4px; min-width: 0;
 }
 .split[aria-pressed="true"] { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
 .split:disabled { opacity: .4; cursor: not-allowed; }
 .split b { font-family: "Big Shoulders Display", sans-serif; font-size: 18px; line-height: 1; font-weight: 800; }
 .split small { font-size: 12px; color: var(--muted); line-height: 1.2; overflow-wrap: anywhere; }
-.badge {
-  position: absolute; top: -8px; right: 6px; font-size: 10px; letter-spacing: .06em; text-transform: uppercase;
-  background: var(--accent); color: var(--accent-ink); padding: 2px 6px; border-radius: 999px;
-}
+.badge { position: absolute; top: -8px; right: 6px; font-size: 10px; letter-spacing: .06em; text-transform: uppercase; background: var(--accent); color: var(--accent-ink); padding: 2px 6px; border-radius: 999px; }
 
 .card { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 16px; display: grid; gap: 14px; min-width: 0; }
+.banner { border: 1px solid var(--accent); border-radius: 14px; padding: 12px 14px; display: grid; gap: 10px; background: var(--surface); }
 .progress { height: 6px; background: var(--surface-2); border-radius: 999px; overflow: hidden; }
 .progress i { display: block; height: 100%; background: var(--accent); width: 0; transition: width .3s; }
-.plan { list-style: none; margin: 0; padding: 0; display: grid; gap: 0; }
+.plan { list-style: none; margin: 0; padding: 0; }
 .plan li { display: flex; justify-content: space-between; gap: 12px; padding: 10px 0; border-top: 1px solid var(--line); }
 .plan li:first-child { border-top: 0; }
-.plan span:last-child { color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.plan li span:last-child { color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.datefield { display: flex; align-items: center; justify-content: space-between; gap: 12px; color: var(--muted); font-size: 14px; }
+input[type="date"] { min-height: 40px; background: var(--surface-2); border: 1px solid var(--line); border-radius: 10px; padding: 0 10px; color: var(--fg); }
 
-.primary, .ghost {
-  min-height: 48px; padding: 0 16px; border-radius: 12px; font-weight: 600; font-size: 15px;
-}
+.primary, .ghost { min-height: 48px; padding: 0 16px; border-radius: 12px; font-weight: 600; font-size: 15px; }
 .primary { background: var(--accent); color: var(--accent-ink); border: 0; }
 .ghost { background: transparent; color: var(--fg); border: 1px solid var(--line); }
-.row { display: flex; gap: 8px; flex-wrap: wrap; }
-.row > * { flex: 1 1 auto; }
+.primary, .ghost { display: inline-flex; align-items: center; justify-content: center; }
+.row > .primary, .row > .ghost { flex: 1 1 auto; }
 .summary { border-left: 3px solid var(--ok); padding: 4px 0 4px 12px; color: var(--muted); }
 .summary b { color: var(--fg); }
 
 .exlist { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
 .ex { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; min-width: 0; }
-.exhead {
-  width: 100%; min-height: 60px; padding: 12px 14px; background: none; border: 0; text-align: left;
-  display: grid; grid-template-columns: 12px minmax(0, 1fr) auto; align-items: center; gap: 12px;
-}
+.exhead { width: 100%; min-height: 64px; padding: 12px 14px; background: none; border: 0; text-align: left; display: grid; grid-template-columns: 12px minmax(0,1fr) auto; align-items: center; gap: 12px; }
 .dot { width: 12px; height: 12px; border-radius: 50%; border: 2px solid var(--muted); box-sizing: border-box; }
 .dot.part { border-color: var(--accent); background: linear-gradient(90deg, var(--accent) 50%, transparent 50%); }
 .dot.ok { background: var(--ok); border-color: var(--ok); }
 .exname { font-weight: 600; min-width: 0; overflow-wrap: anywhere; }
-.exname small { display: block; font-weight: 400; color: var(--muted); font-size: 13px; }
+.exname small { display: block; font-weight: 400; font-size: 13px; color: var(--muted); }
+.exname .sum { color: var(--fg); font-weight: 500; }
+.bump { display: inline-block; margin-left: 6px; font-size: 11px; letter-spacing: .04em; padding: 1px 6px; border-radius: 999px; background: var(--accent); color: var(--accent-ink); font-weight: 600; }
 .exmeta { color: var(--muted); font-variant-numeric: tabular-nums; font-size: 14px; }
 .exbody { padding: 0 14px 14px; display: grid; gap: 10px; min-width: 0; }
-.sethead, .setrow { display: grid; grid-template-columns: 30px minmax(0, 1fr) minmax(0, 1fr) 48px 36px; gap: 8px; align-items: center; }
+.sethead, .setrow { display: grid; grid-template-columns: 30px minmax(0,1fr) minmax(0,1fr) 48px 36px; gap: 8px; align-items: center; }
 .sethead { font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
 .sethead span:nth-child(n+2):nth-child(-n+3) { text-align: center; }
 .setno { color: var(--muted); font-variant-numeric: tabular-nums; }
-.setrow input {
-  width: 100%; min-width: 0; height: 46px; box-sizing: border-box; font-size: 18px; text-align: center;
-  background: var(--surface-2); color: var(--fg); border: 1px solid var(--line); border-radius: 10px;
-  font-variant-numeric: tabular-nums;
-}
-.check {
-  height: 46px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface-2);
-  color: var(--muted); font-size: 20px; font-weight: 700;
-}
+.setrow input { width: 100%; min-width: 0; height: 46px; box-sizing: border-box; font-size: 18px; text-align: center; background: var(--surface-2); border: 1px solid var(--line); border-radius: 10px; font-variant-numeric: tabular-nums; }
+.check { height: 46px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface-2); color: var(--muted); font-size: 20px; font-weight: 700; }
 .check.on { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
 .del { height: 36px; background: none; border: 0; color: var(--muted); font-size: 22px; }
-.exfoot { display: flex; gap: 8px; }
+.exfoot { display: flex; gap: 8px; flex-wrap: wrap; }
 .exfoot > * { flex: 1 1 0; min-width: 0; }
 
-.hist { list-style: none; margin: 0; padding: 0; display: grid; }
-.hist li { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 2px 12px; padding: 10px 0; border-top: 1px solid var(--line); }
-.hist li:first-child { border-top: 0; }
-.hist small { color: var(--muted); }
-
-details { color: var(--muted); }
-summary { cursor: pointer; padding: 6px 0; }
-.chips { display: flex; gap: 8px; flex-wrap: wrap; padding-top: 8px; }
-.chip { min-height: 40px; padding: 0 14px; border-radius: 999px; background: var(--surface-2); border: 1px solid var(--line); color: var(--fg); }
+.chips { display: flex; gap: 8px; flex-wrap: wrap; }
+.chip { min-height: 40px; padding: 0 14px; border-radius: 999px; background: var(--surface-2); border: 1px solid var(--line); }
 .chip[aria-pressed="true"] { background: var(--fg); color: var(--bg); border-color: var(--fg); }
+.field { display: grid; gap: 6px; font-size: 13px; color: var(--muted); }
+select { min-height: 44px; background: var(--surface-2); border: 1px solid var(--line); border-radius: 10px; padding: 0 10px; color: var(--fg); }
 
-.timer {
-  position: fixed; left: 0; right: 0; bottom: 0; z-index: 5;
-  padding: 12px max(16px, env(safe-area-inset-right, 0px)) calc(12px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px));
-  background: var(--surface); border-top: 1px solid var(--accent);
-  display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 6px 12px; align-items: center;
-}
+.chart { width: 100%; height: auto; display: block; }
+.grid { stroke: var(--line); stroke-width: 1; }
+.ln { fill: none; stroke: var(--accent); stroke-width: 2.5; stroke-linejoin: round; stroke-linecap: round; }
+.area { fill: var(--accent); opacity: .12; }
+.pt { fill: var(--accent); }
+.lbl { fill: var(--fg); font-size: 11px; font-variant-numeric: tabular-nums; }
+.axis { fill: var(--muted); font-size: 10px; font-variant-numeric: tabular-nums; }
+.bar { fill: var(--accent); }
+.bar0 { fill: var(--surface-2); }
+
+.hlist { display: grid; gap: 8px; }
+.hcard { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; min-width: 0; }
+.hhead { width: 100%; min-height: 60px; padding: 12px 14px; background: none; border: 0; text-align: left; display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 2px 12px; align-items: center; }
+.hhead small { color: var(--muted); font-size: 13px; }
+.hbody { padding: 0 14px 14px; display: grid; gap: 12px; }
+.hline { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 12px; padding-top: 8px; border-top: 1px solid var(--line); font-size: 14px; }
+.hline span:last-child { color: var(--muted); font-variant-numeric: tabular-nums; text-align: right; }
+.hedit { display: grid; gap: 6px; }
+.hedit .setrow { grid-template-columns: 26px minmax(0,1fr) minmax(0,1fr); }
+.hedit .setrow input { height: 40px; font-size: 16px; }
+
+details { border: 1px solid var(--line); border-radius: 14px; background: var(--surface); padding: 0 14px; }
+details summary { cursor: pointer; min-height: 48px; display: flex; align-items: center; color: var(--muted); }
+details[open] summary { color: var(--fg); }
+details .block { display: grid; gap: 10px; padding: 4px 0 16px; }
+
+.timer { position: fixed; left: 0; right: 0; bottom: 0; z-index: 5; padding: 12px max(16px, env(safe-area-inset-right, 0px)) calc(12px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)); background: var(--surface); border-top: 1px solid var(--accent); display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 6px 12px; align-items: center; }
 .timer > * { min-width: 0; }
-.tlabel { font-size: 12px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); grid-column: 1; }
-.tval { font-family: "Big Shoulders Display", sans-serif; font-size: 40px; font-weight: 800; line-height: 1; font-variant-numeric: tabular-nums; grid-column: 1; }
-.tbtns { grid-column: 2; grid-row: 1 / span 2; display: flex; gap: 6px; }
-.tbtns button { min-height: 44px; padding: 0 12px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface-2); color: var(--fg); font-weight: 600; }
+.tlabel { font-size: 12px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+.tval { font-family: "Big Shoulders Display", sans-serif; font-size: 40px; font-weight: 800; line-height: 1; font-variant-numeric: tabular-nums; }
+.tbtns { display: flex; gap: 6px; }
+.tbtns button { min-height: 44px; padding: 0 12px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface-2); font-weight: 600; }
 .tbtns button.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
 .tbar { grid-column: 1 / -1; height: 4px; background: var(--surface-2); border-radius: 999px; overflow: hidden; }
 .tbar i { display: block; height: 100%; width: 100%; background: var(--accent); }
@@ -164,36 +174,29 @@ summary { cursor: pointer; padding: 6px 0; }
       <div class="eyebrow" id="today"></div>
       <h1>Dreiersplit</h1>
     </div>
-    <div class="status" id="status" role="status" aria-live="polite">lädt …</div>
+    <div class="status" id="status" role="status" aria-live="polite"></div>
   </header>
 
-  <nav class="splits" id="splits" aria-label="Trainingstag"></nav>
+  <nav class="tabs" aria-label="Ansicht">
+    <button type="button" data-act="view" data-v="train" aria-pressed="true">Training</button>
+    <button type="button" data-act="view" data-v="hist" aria-pressed="false">Verlauf</button>
+  </nav>
 
-  <section id="session" aria-label="Training"></section>
-
-  <section aria-labelledby="hist-h">
-    <h2 id="hist-h" style="font-size:20px;margin-bottom:6px">Letzte Trainings</h2>
-    <ul class="hist" id="hist"></ul>
-  </section>
-
-  <details>
-    <summary>Pause zwischen Sätzen: <span id="restLabel" class="num"></span></summary>
-    <div class="chips" id="restChips" role="group" aria-label="Pausenlänge"></div>
-  </details>
+  <div id="app"></div>
 </main>
 
-<div class="timer" id="timer" hidden role="timer" aria-live="off">
+<div class="timer" id="timer" hidden role="timer">
   <div class="tlabel" id="tlabel">Pause</div>
   <div class="tval" id="tval">0:00</div>
   <div class="tbtns">
     <button type="button" data-act="t-add">+30 s</button>
-    <button type="button" class="primary" data-act="t-stop">Weiter</button>
+    <button type="button" class="primary" data-act="t-stop">Überspringen</button>
   </div>
   <div class="tbar"><i id="tbarfill"></i></div>
 </div>
 
 <script>
-// ---- Trainingsplan aus der Numbers-Datei: [Übung, Sätze, Wiederholungen, Gewicht in kg] ----
+// ---- Trainingsplan: [Übung, Sätze, Wiederholungen, Gewicht in kg] ----
 const SPLITS = [
   { id: 1, name: "Brust · Schulter · Arme", short: "Brust, Schulter, Arme", ex: [
     ["Bankdrücken", 3, 6, 60], ["Langhantel Curls", 3, 6, 30], ["Kurzhantel Brust", 3, 8, 18],
@@ -206,121 +209,155 @@ const SPLITS = [
     ["Trizeps Kabelzug", 3, 10, 20], ["Reverse Butterfly", 3, 10, 30], ["Rückenstrecker", 3, 10, null]] },
 ].map(s => ({ ...s, ex: s.ex.map(([name, sets, reps, kg]) => ({ name, sets, reps, kg })) }));
 
-const LS_SESSIONS = "dreiersplit-sessions-v1";
-const LS_REST = "dreiersplit-rest-v1";
+// Gleiche Schlüssel wie V1, damit deine bisherigen Trainings erhalten bleiben.
+const KEY = "dreiersplit-sessions-v1";
+const SET_KEY = "dreiersplit-settings-v2";
+const LEGACY_REST = "dreiersplit-rest-v1";
 const REST_OPTIONS = [60, 90, 120, 180];
+const STEP = 2.5;
+const STALE_MS = 4 * 3600 * 1000;
 
-// ---- State ----
 const S = {
-  db: null, uid: null, backend: "local",
-  sessions: [],            // alle Trainings, neueste zuerst
-  active: null,            // laufendes Training (finishedAt === null)
-  splitId: 1, openIdx: 0,
-  lastSummary: null, finishArmed: false,
-  rest: 90,
+  view: "train", splitId: 1, openIdx: 0,
+  sessions: [], active: null,
+  lastSummary: null, finishArmed: false, dismissed: null,
+  rest: 90, restByEx: {}, settingsOpen: false, importMsg: "",
+  histEx: "Bankdrücken", histOpen: null, editId: null, deleteArmed: null,
 };
 const timer = { end: 0, total: 0, label: "" };
 let audioCtx = null;
 
-// ---- Helpers ----
+// ---- Helfer ----
 const $ = sel => document.querySelector(sel);
 const esc = s => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const todayStr = (ts = Date.now()) => new Date(ts).toLocaleDateString("sv-SE");
-const fmtKg = n => n == null ? "–" : (String(n).replace(".", ",") + " kg");
-const fmtNum = n => Number.isFinite(n) ? String(n).replace(".", ",") : "";
+const fmtNum = n => (n == null || !Number.isFinite(n)) ? "" : String(Math.round(n * 10) / 10).replace(".", ",");
+const fmtKg = n => n == null ? "–" : fmtNum(n) + " kg";
+const fmtDate = iso => new Date(iso + "T12:00:00").toLocaleDateString("de-DE", { weekday: "short", day: "numeric", month: "short" });
+const fmtDateLong = iso => new Date(iso + "T12:00:00").toLocaleDateString("de-DE", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
+const fmtInt = n => Math.round(n).toLocaleString("de-DE");
 const parseKg = v => { const n = parseFloat(String(v).replace(",", ".")); return Number.isFinite(n) ? n : null; };
 const parseReps = v => { const n = parseInt(v, 10); return Number.isFinite(n) ? n : null; };
+const round1 = n => Math.round(n * 10) / 10;
 const newId = () => (crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2));
 const splitById = id => SPLITS.find(s => s.id === id);
-const setStatus = t => { $("#status").textContent = t; };
+const curSplit = () => splitById(S.splitId);
+const ALL_EX = SPLITS.flatMap(s => s.ex.map(e => ({ ...e, split: s.id })));
 const planText = ex => `${ex.sets} × ${ex.reps}${ex.kg != null ? " · " + fmtKg(ex.kg) : ""}`;
+const setStatus = (text, ok = true) => { const el = $("#status"); el.textContent = text; el.dataset.state = ok ? "ok" : "err"; };
 
-function setsOf(sess, ex) {
-  if (!sess.exercises[ex.name]) sess.exercises[ex.name] = { sets: Array.from({ length: ex.sets }, () => ({ kg: ex.kg, reps: ex.reps, done: false })) };
-  return sess.exercises[ex.name].sets;
+function exSummary(sets) {
+  const n = sets.length;
+  if (!n) return "keine Sätze";
+  const reps = sets.map(s => s.reps).filter(v => v != null);
+  const kgs = sets.map(s => s.kg).filter(v => v != null);
+  const repTxt = reps.length === n && reps.every(v => v === reps[0]) ? `${n} × ${reps[0]}` : `${n} Sätze`;
+  let kgTxt = "";
+  if (kgs.length) {
+    const lo = Math.min(...kgs), hi = Math.max(...kgs);
+    kgTxt = lo === hi ? fmtKg(lo) : `${fmtNum(lo)}–${fmtKg(hi)}`;
+  }
+  return [repTxt, kgTxt].filter(Boolean).join(" · ");
 }
 function volume(sess) {
   let v = 0;
   for (const e of Object.values(sess.exercises || {})) for (const s of e.sets) if (s.done && s.kg && s.reps) v += s.kg * s.reps;
   return v;
 }
-function lastSetsFor(name) {
+function setCount(sess) {
+  return Object.values(sess.exercises || {}).flatMap(e => e.sets).filter(s => s.done).length;
+}
+
+// ---- Speicher (sofort, lokal auf dem Gerät) ----
+function loadAll() {
+  try {
+    const raw = JSON.parse(localStorage.getItem(KEY) || "[]");
+    S.sessions = Array.isArray(raw) ? raw : [];
+  } catch { S.sessions = []; }
+  S.sessions.sort((a, b) => b.startedAt - a.startedAt);
+  try {
+    const st = JSON.parse(localStorage.getItem(SET_KEY) || "{}");
+    S.rest = st.rest ?? (Number(localStorage.getItem(LEGACY_REST)) || 90);
+    S.restByEx = st.restByEx ?? {};
+  } catch {}
+}
+function saveAll() {
+  try { localStorage.setItem(KEY, JSON.stringify(S.sessions)); return true; } catch { return false; }
+}
+function saveSettings() {
+  try { localStorage.setItem(SET_KEY, JSON.stringify({ rest: S.rest, restByEx: S.restByEx })); } catch {}
+}
+function commit(sess) {
+  if (sess) sess.updatedAt = Date.now();
+  const ok = saveAll();
+  setStatus(ok ? "✓ gespeichert" : "⚠ nicht gespeichert, Speicher voll?", ok);
+}
+
+// ---- Training ----
+function setsOf(sess, ex) {
+  if (!sess.exercises[ex.name]) sess.exercises[ex.name] = { sets: buildPrefill(ex, null).sets, bump: false };
+  return sess.exercises[ex.name].sets;
+}
+function lastFinishedSets(name) {
   for (const s of S.sessions) {
-    if (s === S.active) continue;
+    if (!s.finishedAt) continue;
     const sets = s.exercises?.[name]?.sets;
-    if (sets && sets.some(x => x.kg != null || x.reps != null)) return sets;
+    if (sets && sets.length) return sets;
   }
   return null;
 }
-function suggestSplit() {
-  const last = { 1: 0, 2: 0, 3: 0 };
-  for (const s of S.sessions) if (s.finishedAt) last[s.split] = Math.max(last[s.split], s.startedAt || 0);
-  return Number(Object.keys(last).sort((a, b) => last[a] - last[b] || a - b)[0]);
+// Gewichtsvorschlag: alle Sätze geschafft und Ziel-Wdh erreicht -> nächstes Mal +2,5 kg.
+function buildPrefill(ex, prev) {
+  if (!prev) return { sets: Array.from({ length: ex.sets }, () => ({ kg: ex.kg, reps: ex.reps, done: false })), bump: false };
+  const hit = prev.every(s => s.done) && prev.every(s => s.reps != null && s.reps >= ex.reps) && prev.some(s => s.kg != null);
+  return {
+    sets: prev.map(p => ({ kg: p.kg == null ? null : (hit ? round1(p.kg + STEP) : p.kg), reps: p.reps, done: false })),
+    bump: hit,
+  };
 }
-
-// ---- Storage: Artifact-Datenbank pro Person, sonst lokaler Fallback ----
-async function loadSessions() {
-  if (S.backend === "db") {
-    const snap = await S.db.collection("data/users/" + S.uid).orderBy("startedAt", "desc").limit(200).get();
-    return snap.docs.filter(d => d.exists).map(d => JSON.parse(JSON.stringify(d.data())));
-  }
-  try { return JSON.parse(localStorage.getItem(LS_SESSIONS) || "[]"); } catch { return []; }
-}
-async function persist(sess) {
-  if (S.backend === "db") { await S.db.collection("data/users/" + S.uid).doc(sess.id).set(sess); return; }
-  try { localStorage.setItem(LS_SESSIONS, JSON.stringify(S.sessions)); } catch {}
-}
-
-let dirty = null, saveTimer = null, saving = false, again = false;
-function scheduleSave(sess) {
-  dirty = sess;
-  setStatus("speichert …");
-  clearTimeout(saveTimer);
-  saveTimer = setTimeout(flush, 400);
-}
-async function flush() {
-  if (saving) { again = true; return; }
-  const sess = dirty; if (!sess) return;
-  dirty = null; saving = true;
-  try { await persist(sess); setStatus(S.backend === "db" ? "gespeichert" : "lokal gespeichert"); }
-  catch { dirty = sess; setStatus("Speichern fehlgeschlagen, wird erneut versucht"); saveTimer = setTimeout(flush, 3000); }
-  finally { saving = false; if (again) { again = false; flush(); } }
-}
-
-// ---- Training-Logik ----
 function startSession() {
-  const sp = splitById(S.splitId);
-  const sess = { id: newId(), split: sp.id, startedAt: Date.now(), date: todayStr(), finishedAt: null, exercises: {} };
+  const sp = curSplit();
+  const sess = { id: newId(), split: sp.id, startedAt: Date.now(), date: todayStr(), finishedAt: null, updatedAt: Date.now(), exercises: {} };
   for (const ex of sp.ex) {
-    const prev = lastSetsFor(ex.name);
-    const count = prev ? Math.max(prev.length, ex.sets) : ex.sets;
-    sess.exercises[ex.name] = { sets: Array.from({ length: count }, (_, i) => {
-      const p = prev ? (prev[i] ?? prev[prev.length - 1]) : null;
-      return { kg: p ? p.kg : ex.kg, reps: p ? p.reps : ex.reps, done: false };
-    }) };
+    const { sets, bump } = buildPrefill(ex, lastFinishedSets(ex.name));
+    sess.exercises[ex.name] = { sets, bump };
   }
   S.sessions.unshift(sess);
-  S.active = sess; S.openIdx = 0; S.lastSummary = null;
-  scheduleSave(sess); render();
+  S.active = sess; S.openIdx = 0; S.lastSummary = null; S.dismissed = null;
+  commit(sess); render();
 }
-function finishSession() {
-  if (!S.finishArmed) {
+function finishSession(force = false) {
+  if (!force && !S.finishArmed) {
     S.finishArmed = true; render();
     setTimeout(() => { if (S.finishArmed) { S.finishArmed = false; render(); } }, 3500);
     return;
   }
   const sess = S.active;
   sess.finishedAt = Date.now();
-  S.lastSummary = { split: sess.split, sets: Object.values(sess.exercises).flatMap(e => e.sets).filter(s => s.done).length, vol: volume(sess) };
+  S.lastSummary = { sets: setCount(sess), vol: volume(sess) };
   S.active = null; S.finishArmed = false;
-  scheduleSave(sess); render();
+  commit(sess); render();
 }
+function restFor(name) { return S.restByEx[name] ?? S.rest; }
 function firstOpenIdx(sess, sp) {
   const i = sp.ex.findIndex(ex => { const sets = sess.exercises[ex.name]?.sets || []; return !(sets.length && sets.every(s => s.done)); });
   return i < 0 ? sp.ex.length - 1 : i;
 }
+function updateExHeader(i) {
+  const ex = curSplit().ex[i];
+  const sets = setsOf(S.active, ex);
+  const sum = document.querySelector(`[data-sum="${i}"]`);
+  if (sum) sum.textContent = exSummary(sets);
+  const cnt = document.querySelector(`[data-cnt="${i}"]`);
+  if (cnt) cnt.textContent = `${sets.filter(s => s.done).length}/${sets.length}`;
+  const dot = document.querySelector(`[data-dot="${i}"]`);
+  if (dot) {
+    const dn = sets.filter(s => s.done).length;
+    dot.className = "dot " + (sets.length && dn === sets.length ? "ok" : dn ? "part" : "");
+  }
+}
 
-// ---- Pausen-Timer (endzeitbasiert, funktioniert auch nach Hintergrund) ----
+// ---- Pausen-Timer ----
 function ensureAudio() {
   try {
     audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
@@ -345,8 +382,7 @@ function drawTimer() {
   if (!timer.end) { el.hidden = true; return; }
   const ms = timer.end - Date.now();
   if (ms <= 0) {
-    timer.end = 0; el.hidden = true;
-    beep();
+    timer.end = 0; el.hidden = true; beep();
     try { navigator.vibrate?.([250, 120, 250]); } catch {}
     return;
   }
@@ -357,22 +393,100 @@ function drawTimer() {
   $("#tbarfill").style.width = (ms / (timer.total * 1000) * 100).toFixed(2) + "%";
 }
 
-// ---- Rendering ----
+// ---- Verlauf: Diagramme ----
+function progressChart(exName) {
+  const pts = [];
+  for (const s of [...S.sessions].reverse()) {
+    if (!s.finishedAt) continue;
+    const sets = s.exercises?.[exName]?.sets || [];
+    const kgs = sets.filter(x => x.done && x.kg != null).map(x => x.kg);
+    if (kgs.length) pts.push({ date: s.date, top: Math.max(...kgs) });
+  }
+  if (pts.length < 2) {
+    return `<p class="muted small">Für die Kurve braucht es mindestens 2 abgeschlossene Trainings mit dieser Übung. Bisher: ${pts.length}.</p>`;
+  }
+  const W = 340, H = 180, L = 36, R = 14, T = 16, B = 26;
+  let lo = Math.min(...pts.map(p => p.top)), hi = Math.max(...pts.map(p => p.top));
+  if (lo === hi) { lo -= 5; hi += 5; } else { const pad = (hi - lo) * 0.15; lo -= pad; hi += pad; }
+  const x = i => L + i * (W - L - R) / (pts.length - 1);
+  const y = v => T + (hi - v) * (H - T - B) / (hi - lo);
+  const grid = [0, 1, 2, 3].map(k => {
+    const v = lo + k * (hi - lo) / 3;
+    return `<line class="grid" x1="${L}" x2="${W - R}" y1="${y(v)}" y2="${y(v)}"/><text class="axis" x="${L - 6}" y="${y(v) + 3}" text-anchor="end">${fmtNum(v)}</text>`;
+  }).join("");
+  const coords = pts.map((p, i) => `${x(i)},${y(p.top)}`);
+  const area = `M${x(0)},${H - B} L${coords.join(" L")} L${x(pts.length - 1)},${H - B} Z`;
+  const showAll = pts.length <= 12;
+  const dots = pts.map((p, i) => `<circle class="pt" cx="${x(i)}" cy="${y(p.top)}" r="4"/>` +
+    (showAll || i === pts.length - 1 ? `<text class="lbl" x="${x(i)}" y="${y(p.top) - 9}" text-anchor="middle">${fmtNum(p.top)}</text>` : "")).join("");
+  const first = pts[0], last = pts[pts.length - 1];
+  const delta = round1(last.top - first.top);
+  const dTxt = delta > 0 ? `+${fmtNum(delta)} kg` : delta < 0 ? `${fmtNum(delta)} kg` : "unverändert";
+  return `
+    <svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Verlauf des Top-Gewichts">
+      ${grid}
+      <path class="area" d="${area}"/>
+      <polyline class="ln" points="${coords.join(" ")}"/>
+      ${dots}
+      <text class="axis" x="${L}" y="${H - 6}">${fmtDate(first.date)}</text>
+      <text class="axis" x="${W - R}" y="${H - 6}" text-anchor="end">${fmtDate(last.date)}</text>
+    </svg>
+    <p class="small num" style="margin:0">Start ${fmtKg(first.top)} · jetzt ${fmtKg(last.top)} · <b>${dTxt}</b></p>`;
+}
+function volumeChart() {
+  const weeks = [];
+  const monday = iso => {
+    const d = new Date(iso + "T12:00:00");
+    d.setDate(d.getDate() - ((d.getDay() + 6) % 7));
+    return todayStr(d.getTime());
+  };
+  const thisMon = monday(todayStr());
+  const base = new Date(thisMon + "T12:00:00");
+  for (let k = 11; k >= 0; k--) {
+    const d = new Date(base); d.setDate(d.getDate() - 7 * k);
+    weeks.push(todayStr(d.getTime()));
+  }
+  const vals = weeks.map(() => 0);
+  for (const s of S.sessions) {
+    if (!s.finishedAt) continue;
+    const idx = weeks.indexOf(monday(s.date));
+    if (idx >= 0) vals[idx] += volume(s);
+  }
+  const max = Math.max(...vals, 1);
+  const W = 340, H = 150, L = 4, R = 4, T = 10, B = 22;
+  const bw = (W - L - R) / weeks.length;
+  const bars = vals.map((v, i) => {
+    const h = v / max * (H - T - B);
+    const cx = L + i * bw + bw * 0.15;
+    const w = bw * 0.7;
+    const label = (i % 3 === 0 || i === weeks.length - 1)
+      ? `<text class="axis" x="${cx + w / 2}" y="${H - 6}" text-anchor="middle">${new Date(weeks[i] + "T12:00:00").toLocaleDateString("de-DE", { day: "numeric", month: "numeric" })}</text>` : "";
+    return `<rect class="${v > 0 ? "bar" : "bar0"}" x="${cx}" y="${H - B - Math.max(h, 2)}" width="${w}" height="${Math.max(h, 2)}" rx="3"/>${label}`;
+  }).join("");
+  const total = vals.reduce((a, b) => a + b, 0);
+  return `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Wochenvolumen">${bars}</svg>
+    <p class="small muted num" style="margin:0">Gesamt letzte 12 Wochen: ${fmtInt(total)} kg</p>`;
+}
+
+// ---- Render: Training ----
 function exerciseHtml(ex, i, sp) {
-  const sets = setsOf(S.active, ex);
-  const dn = sets.filter(s => s.done).length, total = sets.length;
-  const complete = total > 0 && dn === total;
+  const sess = S.active;
+  const data = sess.exercises[ex.name];
+  const sets = setsOf(sess, ex);
+  const dn = sets.filter(s => s.done).length;
+  const complete = sets.length > 0 && dn === sets.length;
   const open = i === S.openIdx;
   const head = `<button class="exhead" type="button" data-act="open" data-i="${i}" aria-expanded="${open}">
-      <span class="dot ${complete ? "ok" : dn ? "part" : ""}"></span>
-      <span class="exname">${esc(ex.name)}<small>${planText(ex)}</small></span>
-      <span class="exmeta num">${dn}/${total}</span></button>`;
+      <span class="dot ${complete ? "ok" : dn ? "part" : ""}" data-dot="${i}"></span>
+      <span class="exname">${esc(ex.name)}${data.bump ? '<span class="bump">+2,5 kg</span>' : ""}
+        <small><span class="sum" data-sum="${i}">${exSummary(sets)}</span> · Plan ${planText(ex)}</small></span>
+      <span class="exmeta num" data-cnt="${i}">${dn}/${sets.length}</span></button>`;
   if (!open) return `<li class="ex">${head}</li>`;
   const rows = sets.map((s, j) => `
       <div class="setrow">
         <span class="setno">${j + 1}</span>
         <input type="text" inputmode="decimal" aria-label="Gewicht in kg, Satz ${j + 1}" value="${fmtNum(s.kg)}" data-f="kg" data-i="${i}" data-j="${j}">
-        <input type="text" inputmode="numeric" aria-label="Wiederholungen, Satz ${j + 1}" value="${fmtNum(s.reps)}" data-f="reps" data-i="${i}" data-j="${j}">
+        <input type="text" inputmode="numeric" aria-label="Wiederholungen, Satz ${j + 1}" value="${s.reps ?? ""}" data-f="reps" data-i="${i}" data-j="${j}">
         <button class="check ${s.done ? "on" : ""}" type="button" data-act="done" data-i="${i}" data-j="${j}" aria-pressed="${s.done}" aria-label="Satz ${j + 1} erledigt">✓</button>
         <button class="del" type="button" data-act="del" data-i="${i}" data-j="${j}" aria-label="Satz ${j + 1} entfernen">×</button>
       </div>`).join("");
@@ -383,133 +497,282 @@ function exerciseHtml(ex, i, sp) {
       ${rows}
       <div class="exfoot">
         <button class="ghost" type="button" data-act="add" data-i="${i}">+ Satz</button>
+        <button class="ghost" type="button" data-act="restex" data-i="${i}">Pause ${restFor(ex.name)} s</button>
         ${last ? "" : `<button class="primary" type="button" data-act="next" data-i="${i}">Nächste Übung →</button>`}
       </div>
     </div></li>`;
 }
-
-function render() {
-  const sp = splitById(S.splitId);
-  const today = new Date();
-  $("#today").textContent = today.toLocaleDateString("de-DE", { weekday: "long", day: "numeric", month: "long" });
-  $("#restLabel").textContent = S.rest + " s";
-  $("#restChips").innerHTML = REST_OPTIONS.map(r => `<button class="chip num" type="button" data-act="rest" data-r="${r}" aria-pressed="${r === S.rest}">${r} s</button>`).join("");
-
+function staleBanner() {
+  if (!S.active || S.dismissed === S.active.id) return "";
+  if (Date.now() - (S.active.updatedAt || S.active.startedAt) < STALE_MS) return "";
+  return `<div class="banner" role="alert">
+    <div>Dein Training vom ${fmtDate(S.active.date)} ist noch offen.</div>
+    <div class="row"><button class="ghost" type="button" data-act="dismiss">Weitermachen</button>
+    <button class="primary" type="button" data-act="finish-now">Beenden</button></div></div>`;
+}
+function settingsHtml() {
+  return `<details id="settings" ${S.settingsOpen ? "open" : ""}>
+    <summary>Einstellungen & Backup</summary>
+    <div class="block">
+      <div class="eyebrow">Standard-Pause zwischen Sätzen</div>
+      <div class="chips">${REST_OPTIONS.map(r => `<button class="chip num" type="button" data-act="rest" data-r="${r}" aria-pressed="${r === S.rest}">${r} s</button>`).join("")}</div>
+      <div class="eyebrow">Backup</div>
+      <div class="row">
+        <button class="ghost" type="button" data-act="export">Exportieren</button>
+        <label class="ghost" style="position:relative;cursor:pointer">Importieren
+          <input class="visually" type="file" id="importFile" accept="application/json,.json"></label>
+      </div>
+      <p class="small muted" style="margin:0">${esc(S.importMsg)}</p>
+      <p class="small muted" style="margin:0">Deine Trainings liegen nur auf diesem Gerät. Exportiere regelmäßig ein Backup.</p>
+    </div></details>`;
+}
+function trainHtml() {
+  const sp = curSplit();
   const sugg = !S.active ? suggestSplit() : null;
-  $("#splits").innerHTML = SPLITS.map(s => `
+  let h = `<nav class="splits" aria-label="Trainingstag">${SPLITS.map(s => `
     <button class="split" type="button" data-act="split" data-id="${s.id}" aria-pressed="${s.id === S.splitId}"
       ${S.active && S.active.split !== s.id ? "disabled" : ""}>
       ${sugg === s.id ? '<span class="badge">Vorschlag</span>' : ""}
-      <b>Tag ${s.id}</b><small>${s.short}</small>
-    </button>`).join("");
-
-  let html = "";
+      <b>Tag ${s.id}</b><small>${s.short}</small></button>`).join("")}</nav>`;
+  h += staleBanner();
   if (!S.active) {
-    if (S.lastSummary) {
-      html += `<div class="summary"><b>Training gespeichert.</b> ${S.lastSummary.sets} Sätze, ${Math.round(S.lastSummary.vol).toLocaleString("de-DE")} kg Volumen.</div>`;
-    }
-    html += `<div class="card">
+    if (S.lastSummary) h += `<div class="summary"><b>Training gespeichert.</b> ${S.lastSummary.sets} Sätze, ${fmtInt(S.lastSummary.vol)} kg Volumen.</div>`;
+    h += `<section class="card">
       <div><div class="eyebrow">Plan</div><h2>${esc(sp.name)}</h2></div>
       <ul class="plan">${sp.ex.map(ex => `<li><span>${esc(ex.name)}</span><span>${planText(ex)}</span></li>`).join("")}</ul>
       <button class="primary" type="button" data-act="start">Training starten</button>
-    </div>`;
+    </section>`;
   } else {
     const sess = S.active;
     const all = sp.ex.flatMap(ex => setsOf(sess, ex));
     const dn = all.filter(s => s.done).length;
-    html += `<div class="card" style="gap:10px">
-      <div class="row" style="justify-content:space-between;align-items:baseline">
+    h += `<section class="card">
+      <div class="row between">
         <div><div class="eyebrow">Laufendes Training</div><h2>${esc(sp.name)}</h2></div>
-        <div class="num" style="color:var(--muted)">${dn}/${all.length} Sätze</div>
+        <div class="num muted">${dn}/${all.length} Sätze</div>
       </div>
+      <label class="datefield">Datum
+        <input type="date" value="${sess.date}" data-f="date"></label>
       <div class="progress" aria-hidden="true"><i style="width:${all.length ? (dn / all.length * 100).toFixed(1) : 0}%"></i></div>
-    </div>`;
-    html += `<ul class="exlist">${sp.ex.map((ex, i) => exerciseHtml(ex, i, sp)).join("")}</ul>`;
-    html += `<button class="${S.finishArmed ? "primary" : "ghost"}" type="button" data-act="finish" style="width:100%">
+    </section>`;
+    h += `<ul class="exlist">${sp.ex.map((ex, i) => exerciseHtml(ex, i, sp)).join("")}</ul>`;
+    h += `<button class="${S.finishArmed ? "primary" : "ghost"}" type="button" data-act="finish" style="width:100%;min-height:52px">
       ${S.finishArmed ? "Sicher? Nochmal tippen zum Beenden" : "Training beenden"}</button>`;
   }
-  $("#session").innerHTML = html;
-
-  const done = S.sessions.filter(s => s.finishedAt).slice(0, 6);
-  $("#hist").innerHTML = done.length ? done.map(s => `
-      <li><span>${esc(splitById(s.split).short)}</span><span class="num">${Math.round(volume(s)).toLocaleString("de-DE")} kg</span>
-      <small>${new Date(s.startedAt).toLocaleDateString("de-DE", { weekday: "short", day: "numeric", month: "short" })}</small>
-      <small class="num">${Object.values(s.exercises).flatMap(e => e.sets).filter(x => x.done).length} Sätze</small></li>`).join("")
-    : `<li><small>Noch keine abgeschlossenen Trainings.</small></li>`;
+  h += settingsHtml();
+  return h;
 }
 
-// ---- Events (Delegation, damit Eingaben den Fokus behalten) ----
+// ---- Render: Verlauf ----
+function histHtml() {
+  const opts = SPLITS.map(s => `<optgroup label="Tag ${s.id}: ${esc(s.short)}">${s.ex.map(e => `<option ${e.name === S.histEx ? "selected" : ""}>${esc(e.name)}</option>`).join("")}</optgroup>`).join("");
+  const done = S.sessions.filter(s => s.finishedAt);
+  let h = `<section class="card">
+      <div><div class="eyebrow">Fortschritt</div><h2>${esc(S.histEx)}</h2></div>
+      <label class="field">Übung<select data-f="histEx">${opts}</select></label>
+      ${progressChart(S.histEx)}
+    </section>
+    <section class="card">
+      <div><div class="eyebrow">Volumen</div><h2 style="font-size:22px">Pro Woche</h2></div>
+      ${volumeChart()}
+    </section>
+    <section>
+      <h2 style="font-size:22px;margin-bottom:10px">Trainings</h2>`;
+  if (!done.length) {
+    h += `<p class="muted">Noch keine abgeschlossenen Trainings.</p>`;
+  } else {
+    h += `<div class="hlist">${done.map(s => historyCard(s)).join("")}</div>`;
+  }
+  h += `</section>`;
+  return h;
+}
+function historyCard(s) {
+  const sp = splitById(s.split);
+  const open = S.histOpen === s.id;
+  const head = `<button class="hhead" type="button" data-act="hist-open" data-id="${s.id}" aria-expanded="${open}">
+    <span>${fmtDateLong(s.date)}<small style="display:block">${esc(sp.short)}</small></span>
+    <span class="num" style="text-align:right">${fmtInt(volume(s))} kg<small style="display:block">${setCount(s)} Sätze</small></span></button>`;
+  if (!open) return `<article class="hcard">${head}</article>`;
+  if (S.editId === s.id) {
+    const body = sp.ex.map(ex => {
+      const sets = s.exercises[ex.name]?.sets || [];
+      return `<div class="hedit"><div class="eyebrow">${esc(ex.name)}</div>${sets.map((x, j) => `
+        <div class="setrow">
+          <span class="setno">${j + 1}</span>
+          <input type="text" inputmode="decimal" aria-label="kg ${esc(ex.name)} Satz ${j + 1}" value="${fmtNum(x.kg)}" data-sid="${s.id}" data-name="${esc(ex.name)}" data-j="${j}" data-f="kg">
+          <input type="text" inputmode="numeric" aria-label="Wdh ${esc(ex.name)} Satz ${j + 1}" value="${x.reps ?? ""}" data-sid="${s.id}" data-name="${esc(ex.name)}" data-j="${j}" data-f="reps">
+        </div>`).join("")}</div>`;
+    }).join("");
+    return `<article class="hcard">${head}<div class="hbody">
+      <label class="datefield">Datum <input type="date" value="${s.date}" data-hdate="${s.id}"></label>
+      ${body}
+      <div class="row">
+        <button class="primary" type="button" data-act="hist-editdone">Fertig</button>
+        <button class="ghost" type="button" data-act="hist-del" data-id="${s.id}">${S.deleteArmed === s.id ? "Sicher löschen?" : "Löschen"}</button>
+      </div></div></article>`;
+  }
+  const lines = sp.ex.map(ex => {
+    const sets = s.exercises[ex.name]?.sets || [];
+    const txt = sets.filter(x => x.done).map(x => `${fmtNum(x.kg) || "–"} × ${x.reps ?? "–"}`).join(" · ") || "–";
+    return `<div class="hline"><span>${esc(ex.name)}</span><span>${txt}</span></div>`;
+  }).join("");
+  return `<article class="hcard">${head}<div class="hbody">${lines}
+    <div class="row"><button class="ghost" type="button" data-act="hist-edit" data-id="${s.id}">Bearbeiten</button>
+    <button class="ghost" type="button" data-act="hist-del" data-id="${s.id}">${S.deleteArmed === s.id ? "Sicher löschen?" : "Löschen"}</button></div>
+  </div></article>`;
+}
+
+function suggestSplit() {
+  const last = { 1: 0, 2: 0, 3: 0 };
+  for (const s of S.sessions) if (s.finishedAt) last[s.split] = Math.max(last[s.split], s.startedAt || 0);
+  return Number(Object.keys(last).sort((a, b) => last[a] - last[b] || a - b)[0]);
+}
+function render() {
+  $("#today").textContent = new Date().toLocaleDateString("de-DE", { weekday: "long", day: "numeric", month: "long" });
+  document.querySelectorAll('[data-act="view"]').forEach(b => b.setAttribute("aria-pressed", String(b.dataset.v === S.view)));
+  $("#app").innerHTML = S.view === "train" ? trainHtml() : histHtml();
+}
+
+// ---- Backup ----
+function exportBackup() {
+  const data = { app: "dreiersplit", version: 2, exportedAt: new Date().toISOString(), sessions: S.sessions, settings: { rest: S.rest, restByEx: S.restByEx } };
+  const url = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: "application/json" }));
+  const a = document.createElement("a");
+  a.href = url; a.download = `dreiersplit-backup-${todayStr()}.json`;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1500);
+  setStatus("Backup erstellt");
+}
+async function importFile(file) {
+  try {
+    const data = JSON.parse(await file.text());
+    const incoming = Array.isArray(data) ? data : data.sessions;
+    if (!Array.isArray(incoming)) throw new Error("format");
+    const map = new Map(S.sessions.map(s => [s.id, s]));
+    let added = 0, updated = 0;
+    for (const s of incoming) {
+      if (!s || !s.id) continue;
+      const cur = map.get(s.id);
+      if (!cur) { map.set(s.id, s); added++; }
+      else if ((s.updatedAt || 0) > (cur.updatedAt || 0)) { map.set(s.id, s); updated++; }
+    }
+    S.sessions = [...map.values()].sort((a, b) => b.startedAt - a.startedAt);
+    S.active = S.sessions.find(s => !s.finishedAt) || null;
+    if (S.active) S.splitId = S.active.split;
+    if (data.settings) {
+      S.rest = data.settings.rest ?? S.rest;
+      S.restByEx = { ...S.restByEx, ...(data.settings.restByEx || {}) };
+      saveSettings();
+    }
+    saveAll();
+    S.importMsg = `Importiert: ${added} neu, ${updated} aktualisiert.`;
+    setStatus("Import fertig");
+  } catch {
+    S.importMsg = "Die Datei passt nicht zum Backup.";
+    setStatus("Import fehlgeschlagen", false);
+  }
+  render();
+}
+
+// ---- Events ----
 document.addEventListener("click", e => {
   const btn = e.target.closest("[data-act]");
   if (!btn) return;
   const act = btn.dataset.act, i = Number(btn.dataset.i), j = Number(btn.dataset.j);
-  const sp = splitById(S.splitId);
   switch (act) {
+    case "view": S.view = btn.dataset.v; render(); break;
     case "split": if (!S.active) { S.splitId = Number(btn.dataset.id); S.openIdx = 0; S.lastSummary = null; render(); } break;
     case "start": startSession(); break;
     case "open": S.openIdx = S.openIdx === i ? -1 : i; render(); break;
     case "done": {
-      const sets = setsOf(S.active, sp.ex[i]);
+      const ex = curSplit().ex[i];
+      const sets = setsOf(S.active, ex);
       sets[j].done = !sets[j].done;
-      if (sets[j].done && j < sets.length - 1) startTimer(S.rest, "Pause · nach Satz " + (j + 1));
-      scheduleSave(S.active); render(); break;
+      if (sets[j].done && j < sets.length - 1) startTimer(restFor(ex.name), "Pause · nach Satz " + (j + 1));
+      commit(S.active); render(); break;
     }
     case "add": {
-      const sets = setsOf(S.active, sp.ex[i]);
+      const sets = setsOf(S.active, curSplit().ex[i]);
       const last = sets[sets.length - 1] || {};
       sets.push({ kg: last.kg ?? null, reps: last.reps ?? null, done: false });
-      scheduleSave(S.active); render(); break;
+      commit(S.active); render(); break;
     }
     case "del": {
-      const sets = setsOf(S.active, sp.ex[i]);
-      if (sets.length > 1) { sets.splice(j, 1); scheduleSave(S.active); render(); }
+      const sets = setsOf(S.active, curSplit().ex[i]);
+      if (sets.length > 1) { sets.splice(j, 1); commit(S.active); render(); }
       break;
     }
-    case "next":
-      S.openIdx = i + 1;
-      startTimer(120, "Pause · nächste Übung");
-      render(); break;
+    case "next": S.openIdx = i + 1; startTimer(120, "Pause · nächste Übung"); render(); break;
+    case "restex": {
+      const name = curSplit().ex[i].name;
+      const cur = restFor(name);
+      const idx = REST_OPTIONS.indexOf(cur);
+      S.restByEx[name] = REST_OPTIONS[(idx + 1) % REST_OPTIONS.length];
+      saveSettings(); render(); break;
+    }
     case "finish": finishSession(); break;
-    case "rest": S.rest = Number(btn.dataset.r); try { localStorage.setItem(LS_REST, S.rest); } catch {} render(); break;
+    case "finish-now": finishSession(true); break;
+    case "dismiss": S.dismissed = S.active.id; render(); break;
+    case "rest": S.rest = Number(btn.dataset.r); saveSettings(); render(); break;
     case "t-add": if (timer.end) { timer.end += 30000; timer.total += 30; drawTimer(); } break;
     case "t-stop": timer.end = 0; drawTimer(); break;
+    case "hist-open": S.histOpen = S.histOpen === btn.dataset.id ? null : btn.dataset.id; S.editId = null; S.deleteArmed = null; render(); break;
+    case "hist-edit": S.editId = btn.dataset.id; S.deleteArmed = null; render(); break;
+    case "hist-editdone": S.editId = null; render(); break;
+    case "hist-del": {
+      const id = btn.dataset.id;
+      if (S.deleteArmed !== id) {
+        S.deleteArmed = id; render();
+        setTimeout(() => { if (S.deleteArmed === id) { S.deleteArmed = null; render(); } }, 3500);
+        break;
+      }
+      S.sessions = S.sessions.filter(s => s.id !== id);
+      S.deleteArmed = null; S.editId = null; S.histOpen = null;
+      saveAll(); setStatus("Training gelöscht"); render(); break;
+    }
+    case "export": exportBackup(); break;
   }
 });
 document.addEventListener("input", e => {
-  const f = e.target.dataset?.f;
-  if (!f || !S.active) return;
-  const i = Number(e.target.dataset.i), j = Number(e.target.dataset.j);
-  const set = setsOf(S.active, splitById(S.splitId).ex[i])[j];
-  set[f] = f === "kg" ? parseKg(e.target.value) : parseReps(e.target.value);
-  scheduleSave(S.active);
+  const t = e.target, f = t.dataset.f;
+  if (f !== "kg" && f !== "reps") return;
+  const val = f === "kg" ? parseKg(t.value) : parseReps(t.value);
+  if (t.dataset.sid) {
+    const sess = S.sessions.find(s => s.id === t.dataset.sid);
+    const set = sess?.exercises[t.dataset.name]?.sets?.[Number(t.dataset.j)];
+    if (!set) return;
+    set[f] = val; commit(sess); return;
+  }
+  if (!S.active) return;
+  const i = Number(t.dataset.i), j = Number(t.dataset.j);
+  setsOf(S.active, curSplit().ex[i])[j][f] = val;
+  commit(S.active);
+  updateExHeader(i);
 });
+document.addEventListener("change", e => {
+  const t = e.target;
+  if (t.dataset.f === "histEx") { S.histEx = t.value; render(); return; }
+  if (t.dataset.f === "date" && S.active) { S.active.date = t.value || S.active.date; commit(S.active); render(); return; }
+  if (t.dataset.hdate) {
+    const sess = S.sessions.find(s => s.id === t.dataset.hdate);
+    if (sess && t.value) { sess.date = t.value; commit(sess); render(); }
+    return;
+  }
+  if (t.id === "importFile" && t.files[0]) importFile(t.files[0]);
+});
+document.addEventListener("toggle", e => {
+  if (e.target.id === "settings") S.settingsOpen = e.target.open;
+}, true);
+document.addEventListener("visibilitychange", () => { if (!document.hidden) render(); });
 
 // ---- Start ----
-async function init() {
-  try { S.rest = Number(localStorage.getItem(LS_REST)) || 90; } catch {}
-  setInterval(drawTimer, 250);
-  render();
-
-  // Datenbank und Nutzer-ID kommen asynchron; ohne sie läuft die App lokal weiter.
-  try {
-    const [db, user] = await Promise.all([
-      window.claude?.use ? window.claude.use("db") : null,
-      window.claude?.use ? window.claude.use("user") : null,
-    ]);
-    if (db && user) {
-      const uid = await user.id();
-      if (uid) { S.db = db; S.uid = uid; S.backend = "db"; }
-    }
-  } catch {}
-
-  try { S.sessions = await loadSessions(); } catch { S.sessions = []; setStatus("Laden fehlgeschlagen"); }
-  S.active = S.sessions.find(s => !s.finishedAt) || null;
-  if (S.active) { S.splitId = S.active.split; S.openIdx = firstOpenIdx(S.active, splitById(S.splitId)); }
-  else S.splitId = suggestSplit();
-  setStatus(S.backend === "db" ? "" : "nur auf diesem Gerät");
-  render();
-}
-init();
+loadAll();
+S.active = S.sessions.find(s => !s.finishedAt) || null;
+if (S.active) { S.splitId = S.active.split; S.openIdx = firstOpenIdx(S.active, curSplit()); }
+else S.splitId = suggestSplit();
+setInterval(drawTimer, 250);
+render();
+setStatus("");
 </script>
 </body>
 </html>
