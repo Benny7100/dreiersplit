@@ -33,8 +33,8 @@
   --ok: #1f8a5b; --danger: #c6372f; color-scheme: light;
 }
 
-html { padding-top: env(safe-area-inset-top, 0px); }
 [hidden] { display: none !important; }
+html { padding-top: env(safe-area-inset-top, 0px); }
 body {
   margin: 0; background: var(--bg); color: var(--fg);
   font: 15px/1.5 "IBM Plex Sans", system-ui, -apple-system, sans-serif;
@@ -43,7 +43,7 @@ body {
   padding-top: 12px; padding-bottom: 150px;
 }
 main { max-width: 560px; margin: 0 auto; display: grid; gap: 18px; }
-button, select, input { font: inherit; color: inherit; }
+button, select, input, textarea { font: inherit; color: inherit; }
 button { cursor: pointer; }
 button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 h1, h2 { font-family: "Big Shoulders Display", "Arial Narrow", sans-serif; font-weight: 800; text-wrap: balance; margin: 0; }
@@ -67,10 +67,7 @@ h2 { font-size: 26px; line-height: 1.05; }
 .tabs button[aria-pressed="true"] { background: var(--surface-2); color: var(--fg); box-shadow: inset 0 0 0 1px var(--line); }
 
 .splits { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
-.split {
-  position: relative; min-height: 64px; padding: 10px 8px; border-radius: 12px; background: var(--surface);
-  border: 1px solid var(--line); text-align: left; display: grid; align-content: space-between; gap: 4px; min-width: 0;
-}
+.split { position: relative; min-height: 64px; padding: 10px 8px; border-radius: 12px; background: var(--surface); border: 1px solid var(--line); text-align: left; display: grid; align-content: space-between; gap: 4px; min-width: 0; }
 .split[aria-pressed="true"] { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
 .split:disabled { opacity: .4; cursor: not-allowed; }
 .split b { font-family: "Big Shoulders Display", sans-serif; font-size: 18px; line-height: 1; font-weight: 800; }
@@ -84,44 +81,49 @@ h2 { font-size: 26px; line-height: 1.05; }
 .plan { list-style: none; margin: 0; padding: 0; }
 .plan li { display: flex; justify-content: space-between; gap: 12px; padding: 10px 0; border-top: 1px solid var(--line); }
 .plan li:first-child { border-top: 0; }
-.plan li span:last-child { color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.plan li span:last-child { color: var(--muted); font-variant-numeric: tabular-nums; text-align: right; }
 .datefield { display: flex; align-items: center; justify-content: space-between; gap: 12px; color: var(--muted); font-size: 14px; }
 input[type="date"] { min-height: 40px; background: var(--surface-2); border: 1px solid var(--line); border-radius: 10px; padding: 0 10px; color: var(--fg); }
 
-.primary, .ghost { min-height: 48px; padding: 0 16px; border-radius: 12px; font-weight: 600; font-size: 15px; }
+.primary, .ghost { min-height: 48px; padding: 0 14px; border-radius: 12px; font-weight: 600; font-size: 15px; display: inline-flex; align-items: center; justify-content: center; }
 .primary { background: var(--accent); color: var(--accent-ink); border: 0; }
 .ghost { background: transparent; color: var(--fg); border: 1px solid var(--line); }
-.primary, .ghost { display: inline-flex; align-items: center; justify-content: center; }
 .row > .primary, .row > .ghost { flex: 1 1 auto; }
 .summary { border-left: 3px solid var(--ok); padding: 4px 0 4px 12px; color: var(--muted); }
 .summary b { color: var(--fg); }
+.toast { position: fixed; top: calc(12px + env(safe-area-inset-top, 0px)); left: 50%; transform: translateX(-50%); z-index: 6; background: var(--accent); color: var(--accent-ink); padding: 10px 18px; border-radius: 999px; font-weight: 600; box-shadow: 0 6px 20px rgba(0,0,0,.35); max-width: calc(100% - 32px); text-align: center; }
 
 .exlist { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
 .ex { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; min-width: 0; }
+.ex.ss { border-left: 3px solid var(--accent); }
+.ex.skip { opacity: .55; }
 .exhead { width: 100%; min-height: 64px; padding: 12px 14px; background: none; border: 0; text-align: left; display: grid; grid-template-columns: 12px minmax(0,1fr) auto; align-items: center; gap: 12px; }
 .dot { width: 12px; height: 12px; border-radius: 50%; border: 2px solid var(--muted); box-sizing: border-box; }
 .dot.part { border-color: var(--accent); background: linear-gradient(90deg, var(--accent) 50%, transparent 50%); }
 .dot.ok { background: var(--ok); border-color: var(--ok); }
+.dot.skip { border-style: dashed; }
 .exname { font-weight: 600; min-width: 0; overflow-wrap: anywhere; }
 .exname small { display: block; font-weight: 400; font-size: 13px; color: var(--muted); }
-.exname .sum { color: var(--fg); font-weight: 600; font-size: 16px; }
+.exname .sum { display: block; color: var(--fg); font-weight: 600; font-size: 16px; }
 .exname small.last { color: var(--muted); }
+.exmeta { color: var(--muted); font-variant-numeric: tabular-nums; font-size: 14px; }
+.tagss { display: inline-block; margin-left: 6px; font-size: 11px; letter-spacing: .04em; padding: 1px 6px; border-radius: 999px; background: var(--accent); color: var(--accent-ink); font-weight: 600; vertical-align: 2px; }
+.exbody { padding: 0 14px 14px; display: grid; gap: 10px; min-width: 0; }
 .sugg { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 12px; background: var(--surface-2); border: 1px dashed var(--accent); }
 .sugg b { color: var(--accent); }
-.bump { display: inline-block; margin-left: 6px; font-size: 11px; letter-spacing: .04em; padding: 1px 6px; border-radius: 999px; background: var(--accent); color: var(--accent-ink); font-weight: 600; }
-.exmeta { color: var(--muted); font-variant-numeric: tabular-nums; font-size: 14px; }
-.exbody { padding: 0 14px 14px; display: grid; gap: 10px; min-width: 0; }
-.sethead, .setrow { display: grid; grid-template-columns: 30px minmax(0,1fr) minmax(0,1fr) 48px 36px; gap: 8px; align-items: center; }
+.plates { font-size: 13px; color: var(--muted); }
+.sethead, .setrow { display: grid; grid-template-columns: 22px minmax(0,1.5fr) minmax(0,1fr) 44px 30px; gap: 6px; align-items: center; }
 .sethead { font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
-.sethead span:nth-child(n+2):nth-child(-n+3) { text-align: center; }
 .setno { color: var(--muted); font-variant-numeric: tabular-nums; }
+.kgcell { display: grid; grid-template-columns: 30px minmax(0,1fr) 30px; gap: 4px; min-width: 0; }
+.step { height: 46px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface-2); font-size: 18px; font-weight: 600; padding: 0; }
 .setrow input { width: 100%; min-width: 0; height: 46px; box-sizing: border-box; font-size: 18px; text-align: center; background: var(--surface-2); border: 1px solid var(--line); border-radius: 10px; font-variant-numeric: tabular-nums; }
 .check { height: 46px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface-2); color: var(--muted); font-size: 20px; font-weight: 700; }
 .check.on { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
 .del { height: 36px; background: none; border: 0; color: var(--muted); font-size: 22px; }
+.note { width: 100%; min-height: 42px; box-sizing: border-box; background: var(--surface-2); border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; font-size: 14px; }
 .exfoot { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .exfoot > * { min-width: 0; white-space: nowrap; font-size: 14px; padding: 0 10px; }
-.exfoot > .primary { grid-column: 1 / -1; }
 
 .chips { display: flex; gap: 8px; flex-wrap: wrap; }
 .chip { min-height: 40px; padding: 0 14px; border-radius: 999px; background: var(--surface-2); border: 1px solid var(--line); }
@@ -129,6 +131,11 @@ input[type="date"] { min-height: 40px; background: var(--surface-2); border: 1px
 .field { display: grid; gap: 6px; font-size: 13px; color: var(--muted); }
 select { min-height: 44px; background: var(--surface-2); border: 1px solid var(--line); border-radius: 10px; padding: 0 10px; color: var(--fg); }
 
+.cal { display: grid; grid-template-columns: repeat(7, minmax(0,1fr)); gap: 6px; }
+.cal span { aspect-ratio: 1; display: grid; place-items: center; border-radius: 8px; font-size: 12px; background: var(--surface-2); color: var(--muted); font-variant-numeric: tabular-nums; }
+.cal span.hit { background: var(--accent); color: var(--accent-ink); font-weight: 700; }
+.cal span.today { box-shadow: inset 0 0 0 2px var(--fg); }
+.cal span.wd { background: none; font-size: 11px; letter-spacing: .06em; text-transform: uppercase; aspect-ratio: auto; }
 .chart { width: 100%; height: auto; display: block; }
 .grid { stroke: var(--line); stroke-width: 1; }
 .ln { fill: none; stroke: var(--accent); stroke-width: 2.5; stroke-linejoin: round; stroke-linecap: round; }
@@ -147,7 +154,7 @@ select { min-height: 44px; background: var(--surface-2); border: 1px solid var(-
 .hline { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 12px; padding-top: 8px; border-top: 1px solid var(--line); font-size: 14px; }
 .hline span:last-child { color: var(--muted); font-variant-numeric: tabular-nums; text-align: right; }
 .hedit { display: grid; gap: 6px; }
-.hedit .setrow { grid-template-columns: 26px minmax(0,1fr) minmax(0,1fr); }
+.hedit .setrow { grid-template-columns: 22px minmax(0,1fr) minmax(0,1fr); }
 .hedit .setrow input { height: 40px; font-size: 16px; }
 
 details { border: 1px solid var(--line); border-radius: 14px; background: var(--surface); padding: 0 14px; }
@@ -167,7 +174,9 @@ details .block { display: grid; gap: 10px; padding: 4px 0 16px; }
 
 @media (max-width: 380px) {
   h1 { font-size: 36px; }
-  .sethead, .setrow { grid-template-columns: 24px minmax(0,1fr) minmax(0,1fr) 42px 30px; gap: 6px; }
+  .sethead, .setrow { grid-template-columns: 18px minmax(0,1.5fr) minmax(0,1fr) 40px 28px; gap: 5px; }
+  .kgcell { grid-template-columns: 26px minmax(0,1fr) 26px; gap: 3px; }
+  .step { font-size: 16px; }
 }
 @media (prefers-reduced-motion: reduce) { .progress i { transition: none; } }
 </style>
@@ -189,6 +198,8 @@ details .block { display: grid; gap: 10px; padding: 4px 0 16px; }
 
   <div id="app"></div>
 </main>
+
+<div class="toast" id="toast" hidden role="status"></div>
 
 <div class="timer" id="timer" hidden role="timer">
   <div class="tlabel" id="tlabel">Pause</div>
@@ -214,6 +225,17 @@ const SPLITS = [
     ["Trizeps Kabelzug", 3, 10, 20], ["Reverse Butterfly", 3, 10, 30], ["Rückenstrecker", 3, 10, null]] },
 ].map(s => ({ ...s, ex: s.ex.map(([name, sets, reps, kg]) => ({ name, sets, reps, kg })) }));
 
+// Supersätze: jeweils zwei Übungen, die direkt nacheinander laufen.
+const SUPERSETS = [
+  ["Bankdrücken", "Langhantel Curls"],
+  ["Kurzhantel Brust", "Kurzhantel Curls"],
+  ["Rudern", "Trizeps Kabelzug"],
+];
+// Langhantel-Übungen: hier wird der Scheibenrechner gezeigt.
+const BARBELL = ["Bankdrücken", "Langhantel Curls", "Kniebeugen", "Kreuzheben"];
+const BAR_KG = 20;
+const PLATES = [25, 20, 15, 10, 5, 2.5, 1.25];
+
 // Gleiche Schlüssel wie V1, damit deine bisherigen Trainings erhalten bleiben.
 const KEY = "dreiersplit-sessions-v1";
 const SET_KEY = "dreiersplit-settings-v2";
@@ -228,15 +250,18 @@ const S = {
   lastSummary: null, finishArmed: false, dismissed: null,
   rest: 90, restByEx: {}, settingsOpen: false, importMsg: "",
   histEx: "Bankdrücken", histOpen: null, editId: null, deleteArmed: null,
+  wake: null,
 };
 const timer = { end: 0, total: 0, label: "" };
 let audioCtx = null;
+let toastTimer = null;
 
 // ---- Helfer ----
 const $ = sel => document.querySelector(sel);
 const esc = s => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
-const todayStr = (ts = Date.now()) => new Date(ts).toLocaleDateString("sv-SE");
-const fmtNum = n => (n == null || !Number.isFinite(n)) ? "" : String(Math.round(n * 10) / 10).replace(".", ",");
+const dayKey = d => d.toLocaleDateString("sv-SE");
+const todayStr = (ts = Date.now()) => dayKey(new Date(ts));
+const fmtNum = n => (n == null || !Number.isFinite(n)) ? "" : String(Math.round(n * 100) / 100).replace(".", ",");
 const fmtKg = n => n == null ? "–" : fmtNum(n) + " kg";
 const fmtDate = iso => new Date(iso + "T12:00:00").toLocaleDateString("de-DE", { weekday: "short", day: "numeric", month: "short" });
 const fmtDateLong = iso => new Date(iso + "T12:00:00").toLocaleDateString("de-DE", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
@@ -244,13 +269,31 @@ const fmtInt = n => Math.round(n).toLocaleString("de-DE");
 const parseKg = v => { const n = parseFloat(String(v).replace(",", ".")); return Number.isFinite(n) ? n : null; };
 const parseReps = v => { const n = parseInt(v, 10); return Number.isFinite(n) ? n : null; };
 const round1 = n => Math.round(n * 10) / 10;
+const pad2 = n => String(n).padStart(2, "0");
+const fmtDur = ms => {
+  const s = Math.max(0, Math.floor(ms / 1000));
+  const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), sec = s % 60;
+  return h ? `${h}:${pad2(m)}:${pad2(sec)}` : `${pad2(m)}:${pad2(sec)}`;
+};
 const newId = () => (crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2));
 const splitById = id => SPLITS.find(s => s.id === id);
 const curSplit = () => splitById(S.splitId);
-const ALL_EX = SPLITS.flatMap(s => s.ex.map(e => ({ ...e, split: s.id })));
+const idxOf = name => curSplit().ex.findIndex(e => e.name === name);
 const planText = ex => `${ex.sets} × ${ex.reps}${ex.kg != null ? " · " + fmtKg(ex.kg) : ""}`;
 const setStatus = (text, ok = true) => { const el = $("#status"); el.textContent = text; el.dataset.state = ok ? "ok" : "err"; };
-
+function showToast(msg) {
+  const el = $("#toast");
+  el.textContent = msg; el.hidden = false;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { el.hidden = true; }, 3800);
+}
+function partnerOf(name) {
+  for (const [a, b] of SUPERSETS) {
+    if (a === name) return { name: b, first: true };
+    if (b === name) return { name: a, first: false };
+  }
+  return null;
+}
 function exSummary(sets) {
   const n = sets.length;
   if (!n) return "keine Sätze";
@@ -263,6 +306,17 @@ function exSummary(sets) {
     kgTxt = lo === hi ? fmtKg(lo) : `${fmtNum(lo)}–${fmtKg(hi)}`;
   }
   return [repTxt, kgTxt].filter(Boolean).join(" · ");
+}
+function plateText(kg) {
+  if (kg == null) return "";
+  if (kg <= BAR_KG) return `Nur Stange (${BAR_KG} kg)`;
+  let rem = Math.round((kg - BAR_KG) / 2 * 100) / 100;
+  const used = [];
+  for (const p of PLATES) {
+    while (rem + 1e-9 >= p) { used.push(p); rem = Math.round((rem - p) * 100) / 100; }
+  }
+  const txt = used.map(fmtNum).join(" + ");
+  return `Pro Seite: ${txt}${rem > 0.001 ? ` (Rest ${fmtNum(rem)} kg, nicht machbar)` : ""}`;
 }
 function volume(sess) {
   let v = 0;
@@ -298,6 +352,19 @@ function commit(sess) {
   setStatus(ok ? "✓ gespeichert" : "⚠ nicht gespeichert, Speicher voll?", ok);
 }
 
+// ---- Bildschirm wachhalten während des Trainings ----
+async function keepAwake() {
+  try {
+    if (!S.active || document.hidden || S.wake || !("wakeLock" in navigator)) return;
+    S.wake = await navigator.wakeLock.request("screen");
+    S.wake.addEventListener?.("release", () => { S.wake = null; });
+  } catch { S.wake = null; }
+}
+function releaseAwake() {
+  try { S.wake?.release?.(); } catch {}
+  S.wake = null;
+}
+
 // ---- Training ----
 function setsOf(sess, ex) {
   if (!sess.exercises[ex.name]) sess.exercises[ex.name] = { sets: buildPrefill(ex, null) };
@@ -310,6 +377,14 @@ function lastFinishedSets(name) {
     if (sets && sets.length) return sets;
   }
   return null;
+}
+function lastNote(name) {
+  for (const s of S.sessions) {
+    if (!s.finishedAt) continue;
+    const n = s.exercises?.[name]?.note;
+    if (n) return n;
+  }
+  return "";
 }
 // Startwerte = letztes Training (oder Plan, wenn es noch keins gibt). Nichts wird automatisch erhöht.
 function buildPrefill(ex, prev) {
@@ -327,15 +402,24 @@ function suggestionFor(ex, prev, sets) {
   const unchanged = sets.every(s => s.kg == null || s.kg === prevKg);
   return unchanged ? round1(prevKg + STEP) : null;
 }
+// Persönlicher Rekord: höchstes Gewicht, das in früheren Trainings bei dieser Übung bewegt wurde.
+function bestBefore(name) {
+  let best = null;
+  for (const s of S.sessions) {
+    if (!s.finishedAt) continue;
+    for (const x of s.exercises?.[name]?.sets || []) {
+      if (x.done && x.kg != null && (best == null || x.kg > best)) best = x.kg;
+    }
+  }
+  return best;
+}
 function startSession() {
   const sp = curSplit();
   const sess = { id: newId(), split: sp.id, startedAt: Date.now(), date: todayStr(), finishedAt: null, updatedAt: Date.now(), exercises: {} };
-  for (const ex of sp.ex) {
-    sess.exercises[ex.name] = { sets: buildPrefill(ex, lastFinishedSets(ex.name)) };
-  }
+  for (const ex of sp.ex) sess.exercises[ex.name] = { sets: buildPrefill(ex, lastFinishedSets(ex.name)) };
   S.sessions.unshift(sess);
   S.active = sess; S.openIdx = 0; S.lastSummary = null; S.dismissed = null;
-  commit(sess); render();
+  commit(sess); keepAwake(); render();
 }
 function finishSession(force = false) {
   if (!force && !S.finishArmed) {
@@ -345,22 +429,33 @@ function finishSession(force = false) {
   }
   const sess = S.active;
   sess.finishedAt = Date.now();
-  S.lastSummary = { sets: setCount(sess), vol: volume(sess) };
+  S.lastSummary = { sets: setCount(sess), vol: volume(sess), min: Math.round((sess.finishedAt - sess.startedAt) / 60000) };
   S.active = null; S.finishArmed = false;
+  releaseAwake();
   commit(sess); render();
 }
 function restFor(name) { return S.restByEx[name] ?? S.rest; }
 function firstOpenIdx(sess, sp) {
-  const i = sp.ex.findIndex(ex => { const sets = sess.exercises[ex.name]?.sets || []; return !(sets.length && sets.every(s => s.done)); });
+  const i = sp.ex.findIndex(ex => { const e = sess.exercises[ex.name]; return !e?.skipped && !(e?.sets?.length && e.sets.every(s => s.done)); });
   return i < 0 ? sp.ex.length - 1 : i;
+}
+function exDone(idx) {
+  const ex = curSplit().ex[idx];
+  if (!ex) return true;
+  const e = S.active.exercises[ex.name];
+  if (e?.skipped) return true;
+  const sets = setsOf(S.active, ex);
+  return sets.every(s => s.done);
 }
 function updateExHeader(i) {
   const ex = curSplit().ex[i];
   const sets = setsOf(S.active, ex);
+  const dn = sets.filter(s => s.done).length;
+  const skipped = !!S.active.exercises[ex.name]?.skipped;
   const sum = document.querySelector(`[data-sum="${i}"]`);
-  if (sum) sum.textContent = exSummary(sets);
+  if (sum) sum.textContent = skipped ? "übersprungen" : exSummary(sets);
   const cnt = document.querySelector(`[data-cnt="${i}"]`);
-  if (cnt) cnt.textContent = `${sets.filter(s => s.done).length}/${sets.length}`;
+  if (cnt) cnt.textContent = skipped ? "–" : `${dn}/${sets.length}`;
   const sg = document.querySelector(`[data-sugg="${i}"]`);
   if (sg) {
     const v = suggestionFor(ex, lastFinishedSets(ex.name), sets);
@@ -368,14 +463,18 @@ function updateExHeader(i) {
     const vt = sg.querySelector("[data-suggval]");
     if (vt && v != null) vt.textContent = fmtKg(v);
   }
+  const pl = document.querySelector(`[data-plates="${i}"]`);
+  if (pl) {
+    const top = Math.max(...sets.map(s => s.kg ?? -Infinity));
+    pl.textContent = Number.isFinite(top) ? plateText(top) : "";
+  }
   const dot = document.querySelector(`[data-dot="${i}"]`);
   if (dot) {
-    const dn = sets.filter(s => s.done).length;
-    dot.className = "dot " + (sets.length && dn === sets.length ? "ok" : dn ? "part" : "");
+    dot.className = "dot " + (skipped ? "skip" : (sets.length && dn === sets.length) ? "ok" : dn ? "part" : "");
   }
 }
 
-// ---- Pausen-Timer ----
+// ---- Pausen-Timer und Trainingszeit ----
 function ensureAudio() {
   try {
     audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
@@ -397,6 +496,8 @@ function startTimer(sec, label) {
 }
 function drawTimer() {
   const el = $("#timer");
+  const elapsed = document.getElementById("elapsed");
+  if (elapsed && S.active) elapsed.textContent = fmtDur(Date.now() - S.active.startedAt);
   if (!timer.end) { el.hidden = true; return; }
   const ms = timer.end - Date.now();
   if (ms <= 0) {
@@ -407,11 +508,11 @@ function drawTimer() {
   el.hidden = false;
   const s = Math.ceil(ms / 1000);
   $("#tlabel").textContent = timer.label;
-  $("#tval").textContent = `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
+  $("#tval").textContent = `${Math.floor(s / 60)}:${pad2(s % 60)}`;
   $("#tbarfill").style.width = (ms / (timer.total * 1000) * 100).toFixed(2) + "%";
 }
 
-// ---- Verlauf: Diagramme ----
+// ---- Verlauf: Diagramme und Kalender ----
 function progressChart(exName) {
   const pts = [];
   for (const s of [...S.sessions].reverse()) {
@@ -430,7 +531,7 @@ function progressChart(exName) {
   const y = v => T + (hi - v) * (H - T - B) / (hi - lo);
   const grid = [0, 1, 2, 3].map(k => {
     const v = lo + k * (hi - lo) / 3;
-    return `<line class="grid" x1="${L}" x2="${W - R}" y1="${y(v)}" y2="${y(v)}"/><text class="axis" x="${L - 6}" y="${y(v) + 3}" text-anchor="end">${fmtNum(v)}</text>`;
+    return `<line class="grid" x1="${L}" x2="${W - R}" y1="${y(v)}" y2="${y(v)}"/><text class="axis" x="${L - 6}" y="${y(v) + 3}" text-anchor="end">${fmtNum(round1(v))}</text>`;
   }).join("");
   const coords = pts.map((p, i) => `${x(i)},${y(p.top)}`);
   const area = `M${x(0)},${H - B} L${coords.join(" L")} L${x(pts.length - 1)},${H - B} Z`;
@@ -452,18 +553,14 @@ function progressChart(exName) {
     <p class="small num" style="margin:0">Start ${fmtKg(first.top)} · jetzt ${fmtKg(last.top)} · <b>${dTxt}</b></p>`;
 }
 function volumeChart() {
-  const weeks = [];
   const monday = iso => {
     const d = new Date(iso + "T12:00:00");
     d.setDate(d.getDate() - ((d.getDay() + 6) % 7));
-    return todayStr(d.getTime());
+    return dayKey(d);
   };
-  const thisMon = monday(todayStr());
-  const base = new Date(thisMon + "T12:00:00");
-  for (let k = 11; k >= 0; k--) {
-    const d = new Date(base); d.setDate(d.getDate() - 7 * k);
-    weeks.push(todayStr(d.getTime()));
-  }
+  const base = new Date(monday(todayStr()) + "T12:00:00");
+  const weeks = [];
+  for (let k = 11; k >= 0; k--) { const d = new Date(base); d.setDate(d.getDate() - 7 * k); weeks.push(dayKey(d)); }
   const vals = weeks.map(() => 0);
   for (const s of S.sessions) {
     if (!s.finishedAt) continue;
@@ -475,8 +572,7 @@ function volumeChart() {
   const bw = (W - L - R) / weeks.length;
   const bars = vals.map((v, i) => {
     const h = v / max * (H - T - B);
-    const cx = L + i * bw + bw * 0.15;
-    const w = bw * 0.7;
+    const cx = L + i * bw + bw * 0.15, w = bw * 0.7;
     const label = (i % 3 === 0 || i === weeks.length - 1)
       ? `<text class="axis" x="${cx + w / 2}" y="${H - 6}" text-anchor="middle">${new Date(weeks[i] + "T12:00:00").toLocaleDateString("de-DE", { day: "numeric", month: "numeric" })}</text>` : "";
     return `<rect class="${v > 0 ? "bar" : "bar0"}" x="${cx}" y="${H - B - Math.max(h, 2)}" width="${w}" height="${Math.max(h, 2)}" rx="3"/>${label}`;
@@ -485,45 +581,91 @@ function volumeChart() {
   return `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Wochenvolumen">${bars}</svg>
     <p class="small muted num" style="margin:0">Gesamt letzte 12 Wochen: ${fmtInt(total)} kg</p>`;
 }
+function calendarHtml() {
+  const days = new Set(S.sessions.filter(s => s.finishedAt).map(s => s.date));
+  // Serie: Trainingstage in Folge, heute zählt erst, wenn trainiert wurde.
+  const d = new Date();
+  if (!days.has(dayKey(d))) d.setDate(d.getDate() - 1);
+  let streak = 0;
+  while (days.has(dayKey(d))) { streak++; d.setDate(d.getDate() - 1); }
+  // Letzte 5 Wochen, Montag bis Sonntag.
+  const today = new Date();
+  const start = new Date(today);
+  start.setDate(start.getDate() - ((start.getDay() + 6) % 7) - 28);
+  const wd = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"].map(w => `<span class="wd">${w}</span>`).join("");
+  let cells = "";
+  const todayKey = dayKey(today);
+  for (let k = 0; k < 35; k++) {
+    const c = new Date(start); c.setDate(start.getDate() + k);
+    const key = dayKey(c);
+    const cls = [days.has(key) ? "hit" : "", key === todayKey ? "today" : ""].join(" ").trim();
+    cells += `<span class="${cls}" title="${key}">${c.getDate()}</span>`;
+  }
+  const weekCount = [...days].filter(k => k >= dayKey(new Date(Date.now() - 6 * 86400000))).length;
+  return `<section class="card">
+    <div class="row between"><div><div class="eyebrow">Kalender</div><h2 style="font-size:22px">${streak} Trainingstage in Folge</h2></div>
+      <div class="num muted small">${weekCount}/7 diese Woche</div></div>
+    <div class="cal">${wd}${cells}</div>
+  </section>`;
+}
 
 // ---- Render: Training ----
 function exerciseHtml(ex, i, sp) {
   const sess = S.active;
+  const e = sess.exercises[ex.name];
+  const skipped = !!e?.skipped;
   const sets = setsOf(sess, ex);
   const prev = lastFinishedSets(ex.name);
   const dn = sets.filter(s => s.done).length;
   const complete = sets.length > 0 && dn === sets.length;
   const open = i === S.openIdx;
+  const pt = partnerOf(ex.name);
   const lastTxt = prev ? exSummary(prev) : `noch kein Wert · Plan ${planText(ex)}`;
   const head = `<button class="exhead" type="button" data-act="open" data-i="${i}" aria-expanded="${open}">
-      <span class="dot ${complete ? "ok" : dn ? "part" : ""}" data-dot="${i}"></span>
-      <span class="exname"><span class="sum" data-sum="${i}">${exSummary(sets)}</span>
-        <small>${esc(ex.name)}</small>
+      <span class="dot ${skipped ? "skip" : complete ? "ok" : dn ? "part" : ""}" data-dot="${i}"></span>
+      <span class="exname"><span class="sum" data-sum="${i}">${skipped ? "übersprungen" : exSummary(sets)}</span>
+        <small>${esc(ex.name)}${pt ? '<span class="tagss">Supersatz</span>' : ""}</small>
         <small class="last">Letztes Mal: ${lastTxt}</small></span>
-      <span class="exmeta num" data-cnt="${i}">${dn}/${sets.length}</span></button>`;
-  if (!open) return `<li class="ex">${head}</li>`;
+      <span class="exmeta num" data-cnt="${i}">${skipped ? "–" : `${dn}/${sets.length}`}</span></button>`;
+  const cls = `ex${pt ? " ss" : ""}${skipped ? " skip" : ""}`;
+  if (!open) return `<li class="${cls}">${head}</li>`;
+  if (skipped) {
+    return `<li class="${cls}">${head}
+      <div class="exbody"><button class="ghost" type="button" data-act="unskip" data-i="${i}">Wieder aufnehmen</button></div></li>`;
+  }
+  const sugg = suggestionFor(ex, prev, sets);
+  const top = Math.max(...sets.map(s => s.kg ?? -Infinity));
+  const isBar = BARBELL.includes(ex.name);
   const rows = sets.map((s, j) => `
       <div class="setrow">
         <span class="setno">${j + 1}</span>
-        <input type="text" inputmode="decimal" aria-label="Gewicht in kg, Satz ${j + 1}" value="${fmtNum(s.kg)}" data-f="kg" data-i="${i}" data-j="${j}">
+        <div class="kgcell">
+          <button class="step" type="button" data-act="kgstep" data-i="${i}" data-j="${j}" data-d="-${STEP}" aria-label="2,5 kg weniger, Satz ${j + 1}">−</button>
+          <input type="text" inputmode="decimal" aria-label="Gewicht in kg, Satz ${j + 1}" value="${fmtNum(s.kg)}" data-f="kg" data-i="${i}" data-j="${j}">
+          <button class="step" type="button" data-act="kgstep" data-i="${i}" data-j="${j}" data-d="${STEP}" aria-label="2,5 kg mehr, Satz ${j + 1}">+</button>
+        </div>
         <input type="text" inputmode="numeric" aria-label="Wiederholungen, Satz ${j + 1}" value="${s.reps ?? ""}" data-f="reps" data-i="${i}" data-j="${j}">
         <button class="check ${s.done ? "on" : ""}" type="button" data-act="done" data-i="${i}" data-j="${j}" aria-pressed="${s.done}" aria-label="Satz ${j + 1} erledigt">✓</button>
         <button class="del" type="button" data-act="del" data-i="${i}" data-j="${j}" aria-label="Satz ${j + 1} entfernen">×</button>
       </div>`).join("");
   const last = i === sp.ex.length - 1;
-  const sugg = suggestionFor(ex, prev, sets);
-  return `<li class="ex">${head}
+  const nextLabel = pt && pt.first ? `Weiter mit ${esc(pt.name)} →` : "Nächste Übung →";
+  return `<li class="${cls}">${head}
     <div class="exbody">
       <div class="sugg" data-sugg="${i}" ${sugg == null ? "hidden" : ""}>
         <span>Vorschlag: <b class="num" data-suggval="${i}">${fmtKg(sugg)}</b></span>
         <button class="ghost" type="button" data-act="apply" data-i="${i}">Übernehmen</button>
       </div>
+      ${isBar ? `<div class="plates" data-plates="${i}">${Number.isFinite(top) ? esc(plateText(top)) : ""}</div>` : ""}
+      ${pt ? `<div class="small muted">Supersatz mit ${esc(pt.name)}</div>` : ""}
       <div class="sethead"><span></span><span>kg</span><span>Wdh</span><span></span><span></span></div>
       ${rows}
+      <input class="note" type="text" maxlength="200" placeholder="Notiz, z. B. ${esc(lastNote(ex.name) || "Sitz auf 4")}" value="${esc(e?.note || "")}" data-note="${i}" aria-label="Notiz zu ${esc(ex.name)}">
       <div class="exfoot">
         <button class="ghost" type="button" data-act="add" data-i="${i}">+ Satz</button>
         <button class="ghost" type="button" data-act="restex" data-i="${i}">Pause ${restFor(ex.name)} s</button>
-        ${last ? "" : `<button class="primary" type="button" data-act="next" data-i="${i}">Nächste Übung →</button>`}
+        <button class="ghost" type="button" data-act="skip" data-i="${i}">Überspringen</button>
+        ${last ? "" : `<button class="primary" type="button" data-act="next" data-i="${i}">${nextLabel}</button>`}
       </div>
     </div></li>`;
 }
@@ -561,14 +703,14 @@ function trainHtml() {
       <b>Tag ${s.id}</b><small>${s.short}</small></button>`).join("")}</nav>`;
   h += staleBanner();
   if (!S.active) {
-    if (S.lastSummary) h += `<div class="summary"><b>Training gespeichert.</b> ${S.lastSummary.sets} Sätze, ${fmtInt(S.lastSummary.vol)} kg Volumen.</div>`;
+    if (S.lastSummary) h += `<div class="summary"><b>Training gespeichert.</b> ${S.lastSummary.sets} Sätze, ${fmtInt(S.lastSummary.vol)} kg Volumen, ${S.lastSummary.min} min.</div>`;
     h += `<section class="card">
       <div><div class="eyebrow">Nächstes Training</div><h2>${esc(sp.name)}</h2></div>
       <ul class="plan">${sp.ex.map(ex => {
         const prev = lastFinishedSets(ex.name);
-        const sugg = suggestionFor(ex, prev, prev ? prev.map(s => ({ ...s })) : []);
+        const sugg2 = suggestionFor(ex, prev, prev ? prev.map(s => ({ ...s })) : []);
         const val = prev ? exSummary(prev) : planText(ex);
-        const tag = sugg != null ? ` <b style="color:var(--accent)">→ ${fmtKg(sugg)}?</b>` : "";
+        const tag = sugg2 != null ? ` <b style="color:var(--accent)">→ ${fmtKg(sugg2)}?</b>` : "";
         return `<li><span>${esc(ex.name)}</span><span>${val}${tag}</span></li>`;
       }).join("")}</ul>
       <p class="small muted" style="margin:0">Werte vom letzten Training. Ohne früheres Training steht hier der Plan.</p>
@@ -576,12 +718,12 @@ function trainHtml() {
     </section>`;
   } else {
     const sess = S.active;
-    const all = sp.ex.flatMap(ex => setsOf(sess, ex));
+    const all = sp.ex.filter(ex => !sess.exercises[ex.name]?.skipped).flatMap(ex => setsOf(sess, ex));
     const dn = all.filter(s => s.done).length;
     h += `<section class="card">
       <div class="row between">
         <div><div class="eyebrow">Laufendes Training</div><h2>${esc(sp.name)}</h2></div>
-        <div class="num muted">${dn}/${all.length} Sätze</div>
+        <div class="num" style="text-align:right"><div style="font-size:22px;font-weight:600" id="elapsed">${fmtDur(Date.now() - sess.startedAt)}</div><div class="small muted">${dn}/${all.length} Sätze</div></div>
       </div>
       <label class="datefield">Datum
         <input type="date" value="${sess.date}" data-f="date"></label>
@@ -599,7 +741,8 @@ function trainHtml() {
 function histHtml() {
   const opts = SPLITS.map(s => `<optgroup label="Tag ${s.id}: ${esc(s.short)}">${s.ex.map(e => `<option ${e.name === S.histEx ? "selected" : ""}>${esc(e.name)}</option>`).join("")}</optgroup>`).join("");
   const done = S.sessions.filter(s => s.finishedAt);
-  let h = `<section class="card">
+  let h = calendarHtml();
+  h += `<section class="card">
       <div><div class="eyebrow">Fortschritt</div><h2>${esc(S.histEx)}</h2></div>
       <label class="field">Übung<select data-f="histEx">${opts}</select></label>
       ${progressChart(S.histEx)}
@@ -610,11 +753,8 @@ function histHtml() {
     </section>
     <section>
       <h2 style="font-size:22px;margin-bottom:10px">Trainings</h2>`;
-  if (!done.length) {
-    h += `<p class="muted">Noch keine abgeschlossenen Trainings.</p>`;
-  } else {
-    h += `<div class="hlist">${done.map(s => historyCard(s)).join("")}</div>`;
-  }
+  if (!done.length) h += `<p class="muted">Noch keine abgeschlossenen Trainings.</p>`;
+  else h += `<div class="hlist">${done.map(s => historyCard(s)).join("")}</div>`;
   h += `</section>`;
   return h;
 }
@@ -628,6 +768,7 @@ function historyCard(s) {
   if (S.editId === s.id) {
     const body = sp.ex.map(ex => {
       const sets = s.exercises[ex.name]?.sets || [];
+      if (!sets.length) return "";
       return `<div class="hedit"><div class="eyebrow">${esc(ex.name)}</div>${sets.map((x, j) => `
         <div class="setrow">
           <span class="setno">${j + 1}</span>
@@ -644,9 +785,12 @@ function historyCard(s) {
       </div></div></article>`;
   }
   const lines = sp.ex.map(ex => {
-    const sets = s.exercises[ex.name]?.sets || [];
+    const e = s.exercises[ex.name];
+    if (e?.skipped) return `<div class="hline"><span>${esc(ex.name)}</span><span>übersprungen</span></div>`;
+    const sets = e?.sets || [];
     const txt = sets.filter(x => x.done).map(x => `${fmtNum(x.kg) || "–"} × ${x.reps ?? "–"}`).join(" · ") || "–";
-    return `<div class="hline"><span>${esc(ex.name)}</span><span>${txt}</span></div>`;
+    const note = e?.note ? `<small style="display:block;color:var(--muted)">${esc(e.note)}</small>` : "";
+    return `<div class="hline"><span>${esc(ex.name)}${note}</span><span>${txt}</span></div>`;
   }).join("");
   return `<article class="hcard">${head}<div class="hbody">${lines}
     <div class="row"><button class="ghost" type="button" data-act="hist-edit" data-id="${s.id}">Bearbeiten</button>
@@ -719,9 +863,39 @@ document.addEventListener("click", e => {
     case "done": {
       const ex = curSplit().ex[i];
       const sets = setsOf(S.active, ex);
-      sets[j].done = !sets[j].done;
-      if (sets[j].done && j < sets.length - 1) startTimer(restFor(ex.name), "Pause · nach Satz " + (j + 1));
+      const set = sets[j];
+      const was = set.done;
+      set.done = !set.done;
+      if (set.done && !was && set.kg != null) {
+        const best = bestBefore(ex.name);
+        if (best != null && set.kg > best) showToast(`Neuer Rekord: ${ex.name} ${fmtKg(set.kg)}`);
+      }
+      const pt = partnerOf(ex.name);
+      if (set.done) {
+        if (pt && pt.first) {
+          // Erste Übung im Supersatz: direkt zur zweiten, keine Pause.
+          const p = idxOf(pt.name);
+          if (p >= 0 && !exDone(p)) S.openIdx = p;
+        } else if (pt && !pt.first) {
+          // Zweite Übung: zurück zur ersten, dann Pause.
+          const a = idxOf(pt.name);
+          if (a >= 0 && !exDone(a)) S.openIdx = a;
+          const bothDone = exDone(i) && exDone(a);
+          if (!bothDone) startTimer(restFor(ex.name), "Pause · nach Supersatz");
+        } else if (j < sets.length - 1) {
+          startTimer(restFor(ex.name), "Pause · nach Satz " + (j + 1));
+        }
+      }
       commit(S.active); render(); break;
+    }
+    case "kgstep": {
+      const ex = curSplit().ex[i];
+      const set = setsOf(S.active, ex)[j];
+      const d = Number(btn.dataset.d);
+      set.kg = Math.max(0, round1((set.kg ?? 0) + d));
+      const input = document.querySelector(`[data-f="kg"][data-i="${i}"][data-j="${j}"]`);
+      if (input) input.value = fmtNum(set.kg);
+      commit(S.active); updateExHeader(i); break;
     }
     case "add": {
       const sets = setsOf(S.active, curSplit().ex[i]);
@@ -734,7 +908,23 @@ document.addEventListener("click", e => {
       if (sets.length > 1) { sets.splice(j, 1); commit(S.active); render(); }
       break;
     }
-    case "next": S.openIdx = i + 1; startTimer(120, "Pause · nächste Übung"); render(); break;
+    case "skip": {
+      const ex = curSplit().ex[i];
+      const e = S.active.exercises[ex.name] || (S.active.exercises[ex.name] = { sets: setsOf(S.active, ex) });
+      e.skipped = true;
+      if (i + 1 < curSplit().ex.length) S.openIdx = i + 1;
+      commit(S.active); render(); break;
+    }
+    case "unskip": {
+      const ex = curSplit().ex[i];
+      if (S.active.exercises[ex.name]) delete S.active.exercises[ex.name].skipped;
+      commit(S.active); render(); break;
+    }
+    case "next": {
+      const pt = partnerOf(curSplit().ex[i].name);
+      if (pt && pt.first && idxOf(pt.name) >= 0) { S.openIdx = idxOf(pt.name); render(); break; }
+      S.openIdx = i + 1; startTimer(120, "Pause · nächste Übung"); render(); break;
+    }
     case "apply": {
       const ex = curSplit().ex[i];
       const sets = setsOf(S.active, ex);
@@ -745,8 +935,7 @@ document.addEventListener("click", e => {
     }
     case "restex": {
       const name = curSplit().ex[i].name;
-      const cur = restFor(name);
-      const idx = REST_OPTIONS.indexOf(cur);
+      const idx = REST_OPTIONS.indexOf(restFor(name));
       S.restByEx[name] = REST_OPTIONS[(idx + 1) % REST_OPTIONS.length];
       saveSettings(); render(); break;
     }
@@ -774,7 +963,17 @@ document.addEventListener("click", e => {
   }
 });
 document.addEventListener("input", e => {
-  const t = e.target, f = t.dataset.f;
+  const t = e.target;
+  if (t.hasAttribute("data-note")) {
+    const i = Number(t.dataset.note);
+    const ex = curSplit().ex[i];
+    if (!S.active || !ex) return;
+    const e2 = S.active.exercises[ex.name] || (S.active.exercises[ex.name] = { sets: setsOf(S.active, ex) });
+    e2.note = t.value;
+    commit(S.active);
+    return;
+  }
+  const f = t.dataset.f;
   if (f !== "kg" && f !== "reps") return;
   const val = f === "kg" ? parseKg(t.value) : parseReps(t.value);
   if (t.dataset.sid) {
@@ -803,7 +1002,9 @@ document.addEventListener("change", e => {
 document.addEventListener("toggle", e => {
   if (e.target.id === "settings") S.settingsOpen = e.target.open;
 }, true);
-document.addEventListener("visibilitychange", () => { if (!document.hidden) render(); });
+document.addEventListener("visibilitychange", () => {
+  if (!document.hidden) { render(); keepAwake(); }
+});
 
 // ---- Start ----
 loadAll();
@@ -813,6 +1014,7 @@ else S.splitId = suggestSplit();
 setInterval(drawTimer, 250);
 render();
 setStatus("");
+keepAwake();
 </script>
 </body>
 </html>
