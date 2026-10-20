@@ -563,8 +563,15 @@ function trainHtml() {
   if (!S.active) {
     if (S.lastSummary) h += `<div class="summary"><b>Training gespeichert.</b> ${S.lastSummary.sets} Sätze, ${fmtInt(S.lastSummary.vol)} kg Volumen.</div>`;
     h += `<section class="card">
-      <div><div class="eyebrow">Plan</div><h2>${esc(sp.name)}</h2></div>
-      <ul class="plan">${sp.ex.map(ex => `<li><span>${esc(ex.name)}</span><span>${planText(ex)}</span></li>`).join("")}</ul>
+      <div><div class="eyebrow">Nächstes Training</div><h2>${esc(sp.name)}</h2></div>
+      <ul class="plan">${sp.ex.map(ex => {
+        const prev = lastFinishedSets(ex.name);
+        const sugg = suggestionFor(ex, prev, prev ? prev.map(s => ({ ...s })) : []);
+        const val = prev ? exSummary(prev) : planText(ex);
+        const tag = sugg != null ? ` <b style="color:var(--accent)">→ ${fmtKg(sugg)}?</b>` : "";
+        return `<li><span>${esc(ex.name)}</span><span>${val}${tag}</span></li>`;
+      }).join("")}</ul>
+      <p class="small muted" style="margin:0">Werte vom letzten Training. Ohne früheres Training steht hier der Plan.</p>
       <button class="primary" type="button" data-act="start">Training starten</button>
     </section>`;
   } else {
