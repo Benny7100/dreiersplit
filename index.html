@@ -1,0 +1,515 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Training">
+<meta name="theme-color" content="#0d0e10">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-180.png">
+<title>Dreiersplit Training</title>
+<style>
+/* Layout: one narrow column, big touch targets, a timer pinned to the bottom edge. */
+:root {
+  color-scheme: dark;
+  --bg: #0d0e10;
+  --surface: #17191c;
+  --surface-2: #202328;
+  --line: #2b2f36;
+  --fg: #f2efe8;
+  --muted: #8d939c;
+  --accent: #ff7a45;
+  --accent-ink: #1a0d06;
+  --ok: #7fd1a8;
+  --danger: #ff7b7b;
+}
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    --bg: #f3f1ec; --surface: #ffffff; --surface-2: #ebe9e3; --line: #d9d6ce;
+    --fg: #16181b; --muted: #6b7079; --accent: #e5521c; --accent-ink: #ffffff;
+    --ok: #1f8a5b; --danger: #c6372f; color-scheme: light;
+  }
+}
+:root[data-theme="light"] {
+  --bg: #f3f1ec; --surface: #ffffff; --surface-2: #ebe9e3; --line: #d9d6ce;
+  --fg: #16181b; --muted: #6b7079; --accent: #e5521c; --accent-ink: #ffffff;
+  --ok: #1f8a5b; --danger: #c6372f; color-scheme: light;
+}
+
+html { padding-top: env(safe-area-inset-top, 0px); }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font: 15px/1.5 "IBM Plex Sans", system-ui, -apple-system, sans-serif;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-bottom: 150px;
+}
+main { max-width: 560px; margin: 0 auto; display: grid; gap: 20px; }
+button { font: inherit; color: inherit; cursor: pointer; }
+button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+h1, h2 { font-family: "Big Shoulders Display", "Arial Narrow", sans-serif; font-weight: 800; text-wrap: balance; margin: 0; }
+h1 { font-size: 44px; line-height: .95; text-transform: uppercase; letter-spacing: .01em; }
+h2 { font-size: 26px; line-height: 1.05; }
+.eyebrow { font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+.num { font-variant-numeric: tabular-nums; }
+
+.top { display: flex; justify-content: space-between; align-items: flex-end; gap: 12px; padding-top: 12px; }
+.status { font-size: 12px; color: var(--muted); text-align: right; min-height: 1em; }
+
+.splits { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.split {
+  position: relative; min-height: 64px; padding: 10px 8px; border-radius: 12px;
+  background: var(--surface); border: 1px solid var(--line); text-align: left;
+  display: grid; align-content: space-between; gap: 4px; min-width: 0;
+}
+.split[aria-pressed="true"] { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+.split:disabled { opacity: .4; cursor: not-allowed; }
+.split b { font-family: "Big Shoulders Display", sans-serif; font-size: 18px; line-height: 1; font-weight: 800; }
+.split small { font-size: 12px; color: var(--muted); line-height: 1.2; overflow-wrap: anywhere; }
+.badge {
+  position: absolute; top: -8px; right: 6px; font-size: 10px; letter-spacing: .06em; text-transform: uppercase;
+  background: var(--accent); color: var(--accent-ink); padding: 2px 6px; border-radius: 999px;
+}
+
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 16px; display: grid; gap: 14px; min-width: 0; }
+.progress { height: 6px; background: var(--surface-2); border-radius: 999px; overflow: hidden; }
+.progress i { display: block; height: 100%; background: var(--accent); width: 0; transition: width .3s; }
+.plan { list-style: none; margin: 0; padding: 0; display: grid; gap: 0; }
+.plan li { display: flex; justify-content: space-between; gap: 12px; padding: 10px 0; border-top: 1px solid var(--line); }
+.plan li:first-child { border-top: 0; }
+.plan span:last-child { color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+.primary, .ghost {
+  min-height: 48px; padding: 0 16px; border-radius: 12px; font-weight: 600; font-size: 15px;
+}
+.primary { background: var(--accent); color: var(--accent-ink); border: 0; }
+.ghost { background: transparent; color: var(--fg); border: 1px solid var(--line); }
+.row { display: flex; gap: 8px; flex-wrap: wrap; }
+.row > * { flex: 1 1 auto; }
+.summary { border-left: 3px solid var(--ok); padding: 4px 0 4px 12px; color: var(--muted); }
+.summary b { color: var(--fg); }
+
+.exlist { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.ex { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; min-width: 0; }
+.exhead {
+  width: 100%; min-height: 60px; padding: 12px 14px; background: none; border: 0; text-align: left;
+  display: grid; grid-template-columns: 12px minmax(0, 1fr) auto; align-items: center; gap: 12px;
+}
+.dot { width: 12px; height: 12px; border-radius: 50%; border: 2px solid var(--muted); box-sizing: border-box; }
+.dot.part { border-color: var(--accent); background: linear-gradient(90deg, var(--accent) 50%, transparent 50%); }
+.dot.ok { background: var(--ok); border-color: var(--ok); }
+.exname { font-weight: 600; min-width: 0; overflow-wrap: anywhere; }
+.exname small { display: block; font-weight: 400; color: var(--muted); font-size: 13px; }
+.exmeta { color: var(--muted); font-variant-numeric: tabular-nums; font-size: 14px; }
+.exbody { padding: 0 14px 14px; display: grid; gap: 10px; min-width: 0; }
+.sethead, .setrow { display: grid; grid-template-columns: 30px minmax(0, 1fr) minmax(0, 1fr) 48px 36px; gap: 8px; align-items: center; }
+.sethead { font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+.sethead span:nth-child(n+2):nth-child(-n+3) { text-align: center; }
+.setno { color: var(--muted); font-variant-numeric: tabular-nums; }
+.setrow input {
+  width: 100%; min-width: 0; height: 46px; box-sizing: border-box; font-size: 18px; text-align: center;
+  background: var(--surface-2); color: var(--fg); border: 1px solid var(--line); border-radius: 10px;
+  font-variant-numeric: tabular-nums;
+}
+.check {
+  height: 46px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface-2);
+  color: var(--muted); font-size: 20px; font-weight: 700;
+}
+.check.on { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.del { height: 36px; background: none; border: 0; color: var(--muted); font-size: 22px; }
+.exfoot { display: flex; gap: 8px; }
+.exfoot > * { flex: 1 1 0; min-width: 0; }
+
+.hist { list-style: none; margin: 0; padding: 0; display: grid; }
+.hist li { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 2px 12px; padding: 10px 0; border-top: 1px solid var(--line); }
+.hist li:first-child { border-top: 0; }
+.hist small { color: var(--muted); }
+
+details { color: var(--muted); }
+summary { cursor: pointer; padding: 6px 0; }
+.chips { display: flex; gap: 8px; flex-wrap: wrap; padding-top: 8px; }
+.chip { min-height: 40px; padding: 0 14px; border-radius: 999px; background: var(--surface-2); border: 1px solid var(--line); color: var(--fg); }
+.chip[aria-pressed="true"] { background: var(--fg); color: var(--bg); border-color: var(--fg); }
+
+.timer {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 5;
+  padding: 12px max(16px, env(safe-area-inset-right, 0px)) calc(12px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px));
+  background: var(--surface); border-top: 1px solid var(--accent);
+  display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 6px 12px; align-items: center;
+}
+.timer > * { min-width: 0; }
+.tlabel { font-size: 12px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); grid-column: 1; }
+.tval { font-family: "Big Shoulders Display", sans-serif; font-size: 40px; font-weight: 800; line-height: 1; font-variant-numeric: tabular-nums; grid-column: 1; }
+.tbtns { grid-column: 2; grid-row: 1 / span 2; display: flex; gap: 6px; }
+.tbtns button { min-height: 44px; padding: 0 12px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface-2); color: var(--fg); font-weight: 600; }
+.tbtns button.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.tbar { grid-column: 1 / -1; height: 4px; background: var(--surface-2); border-radius: 999px; overflow: hidden; }
+.tbar i { display: block; height: 100%; width: 100%; background: var(--accent); }
+
+@media (max-width: 380px) {
+  h1 { font-size: 36px; }
+  .sethead, .setrow { grid-template-columns: 24px minmax(0,1fr) minmax(0,1fr) 42px 30px; gap: 6px; }
+}
+@media (prefers-reduced-motion: reduce) { .progress i { transition: none; } }
+</style>
+</head>
+<body>
+<main>
+  <header class="top">
+    <div>
+      <div class="eyebrow" id="today"></div>
+      <h1>Dreiersplit</h1>
+    </div>
+    <div class="status" id="status" role="status" aria-live="polite">lädt …</div>
+  </header>
+
+  <nav class="splits" id="splits" aria-label="Trainingstag"></nav>
+
+  <section id="session" aria-label="Training"></section>
+
+  <section aria-labelledby="hist-h">
+    <h2 id="hist-h" style="font-size:20px;margin-bottom:6px">Letzte Trainings</h2>
+    <ul class="hist" id="hist"></ul>
+  </section>
+
+  <details>
+    <summary>Pause zwischen Sätzen: <span id="restLabel" class="num"></span></summary>
+    <div class="chips" id="restChips" role="group" aria-label="Pausenlänge"></div>
+  </details>
+</main>
+
+<div class="timer" id="timer" hidden role="timer" aria-live="off">
+  <div class="tlabel" id="tlabel">Pause</div>
+  <div class="tval" id="tval">0:00</div>
+  <div class="tbtns">
+    <button type="button" data-act="t-add">+30 s</button>
+    <button type="button" class="primary" data-act="t-stop">Weiter</button>
+  </div>
+  <div class="tbar"><i id="tbarfill"></i></div>
+</div>
+
+<script>
+// ---- Trainingsplan aus der Numbers-Datei: [Übung, Sätze, Wiederholungen, Gewicht in kg] ----
+const SPLITS = [
+  { id: 1, name: "Brust · Schulter · Arme", short: "Brust, Schulter, Arme", ex: [
+    ["Bankdrücken", 3, 6, 60], ["Langhantel Curls", 3, 6, 30], ["Kurzhantel Brust", 3, 8, 18],
+    ["Kurzhantel Curls", 3, 8, 10], ["Kurzhantel Schulter", 2, 8, 7.5], ["Butterfly", 2, 10, 50], ["Curl Maschine", 2, 10, 35]] },
+  { id: 2, name: "Beine · Bauch", short: "Beine, Bauch", ex: [
+    ["Kniebeugen", 3, 6, 75], ["Beinpresse", 3, 8, 150], ["Beinbeuger", 3, 8, 70],
+    ["Beinstrecker", 3, 8, 50], ["Waden Maschine", 3, 15, 60], ["Bauch Maschine", 3, 8, 30]] },
+  { id: 3, name: "Rücken · Trizeps", short: "Rücken, Trizeps", ex: [
+    ["Kreuzheben", 3, 6, 80], ["Latzug", 3, 8, 70], ["Rudern", 3, 8, 60],
+    ["Trizeps Kabelzug", 3, 10, 20], ["Reverse Butterfly", 3, 10, 30], ["Rückenstrecker", 3, 10, null]] },
+].map(s => ({ ...s, ex: s.ex.map(([name, sets, reps, kg]) => ({ name, sets, reps, kg })) }));
+
+const LS_SESSIONS = "dreiersplit-sessions-v1";
+const LS_REST = "dreiersplit-rest-v1";
+const REST_OPTIONS = [60, 90, 120, 180];
+
+// ---- State ----
+const S = {
+  db: null, uid: null, backend: "local",
+  sessions: [],            // alle Trainings, neueste zuerst
+  active: null,            // laufendes Training (finishedAt === null)
+  splitId: 1, openIdx: 0,
+  lastSummary: null, finishArmed: false,
+  rest: 90,
+};
+const timer = { end: 0, total: 0, label: "" };
+let audioCtx = null;
+
+// ---- Helpers ----
+const $ = sel => document.querySelector(sel);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const todayStr = (ts = Date.now()) => new Date(ts).toLocaleDateString("sv-SE");
+const fmtKg = n => n == null ? "–" : (String(n).replace(".", ",") + " kg");
+const fmtNum = n => Number.isFinite(n) ? String(n).replace(".", ",") : "";
+const parseKg = v => { const n = parseFloat(String(v).replace(",", ".")); return Number.isFinite(n) ? n : null; };
+const parseReps = v => { const n = parseInt(v, 10); return Number.isFinite(n) ? n : null; };
+const newId = () => (crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2));
+const splitById = id => SPLITS.find(s => s.id === id);
+const setStatus = t => { $("#status").textContent = t; };
+const planText = ex => `${ex.sets} × ${ex.reps}${ex.kg != null ? " · " + fmtKg(ex.kg) : ""}`;
+
+function setsOf(sess, ex) {
+  if (!sess.exercises[ex.name]) sess.exercises[ex.name] = { sets: Array.from({ length: ex.sets }, () => ({ kg: ex.kg, reps: ex.reps, done: false })) };
+  return sess.exercises[ex.name].sets;
+}
+function volume(sess) {
+  let v = 0;
+  for (const e of Object.values(sess.exercises || {})) for (const s of e.sets) if (s.done && s.kg && s.reps) v += s.kg * s.reps;
+  return v;
+}
+function lastSetsFor(name) {
+  for (const s of S.sessions) {
+    if (s === S.active) continue;
+    const sets = s.exercises?.[name]?.sets;
+    if (sets && sets.some(x => x.kg != null || x.reps != null)) return sets;
+  }
+  return null;
+}
+function suggestSplit() {
+  const last = { 1: 0, 2: 0, 3: 0 };
+  for (const s of S.sessions) if (s.finishedAt) last[s.split] = Math.max(last[s.split], s.startedAt || 0);
+  return Number(Object.keys(last).sort((a, b) => last[a] - last[b] || a - b)[0]);
+}
+
+// ---- Storage: Artifact-Datenbank pro Person, sonst lokaler Fallback ----
+async function loadSessions() {
+  if (S.backend === "db") {
+    const snap = await S.db.collection("data/users/" + S.uid).orderBy("startedAt", "desc").limit(200).get();
+    return snap.docs.filter(d => d.exists).map(d => JSON.parse(JSON.stringify(d.data())));
+  }
+  try { return JSON.parse(localStorage.getItem(LS_SESSIONS) || "[]"); } catch { return []; }
+}
+async function persist(sess) {
+  if (S.backend === "db") { await S.db.collection("data/users/" + S.uid).doc(sess.id).set(sess); return; }
+  try { localStorage.setItem(LS_SESSIONS, JSON.stringify(S.sessions)); } catch {}
+}
+
+let dirty = null, saveTimer = null, saving = false, again = false;
+function scheduleSave(sess) {
+  dirty = sess;
+  setStatus("speichert …");
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(flush, 400);
+}
+async function flush() {
+  if (saving) { again = true; return; }
+  const sess = dirty; if (!sess) return;
+  dirty = null; saving = true;
+  try { await persist(sess); setStatus(S.backend === "db" ? "gespeichert" : "lokal gespeichert"); }
+  catch { dirty = sess; setStatus("Speichern fehlgeschlagen, wird erneut versucht"); saveTimer = setTimeout(flush, 3000); }
+  finally { saving = false; if (again) { again = false; flush(); } }
+}
+
+// ---- Training-Logik ----
+function startSession() {
+  const sp = splitById(S.splitId);
+  const sess = { id: newId(), split: sp.id, startedAt: Date.now(), date: todayStr(), finishedAt: null, exercises: {} };
+  for (const ex of sp.ex) {
+    const prev = lastSetsFor(ex.name);
+    const count = prev ? Math.max(prev.length, ex.sets) : ex.sets;
+    sess.exercises[ex.name] = { sets: Array.from({ length: count }, (_, i) => {
+      const p = prev ? (prev[i] ?? prev[prev.length - 1]) : null;
+      return { kg: p ? p.kg : ex.kg, reps: p ? p.reps : ex.reps, done: false };
+    }) };
+  }
+  S.sessions.unshift(sess);
+  S.active = sess; S.openIdx = 0; S.lastSummary = null;
+  scheduleSave(sess); render();
+}
+function finishSession() {
+  if (!S.finishArmed) {
+    S.finishArmed = true; render();
+    setTimeout(() => { if (S.finishArmed) { S.finishArmed = false; render(); } }, 3500);
+    return;
+  }
+  const sess = S.active;
+  sess.finishedAt = Date.now();
+  S.lastSummary = { split: sess.split, sets: Object.values(sess.exercises).flatMap(e => e.sets).filter(s => s.done).length, vol: volume(sess) };
+  S.active = null; S.finishArmed = false;
+  scheduleSave(sess); render();
+}
+function firstOpenIdx(sess, sp) {
+  const i = sp.ex.findIndex(ex => { const sets = sess.exercises[ex.name]?.sets || []; return !(sets.length && sets.every(s => s.done)); });
+  return i < 0 ? sp.ex.length - 1 : i;
+}
+
+// ---- Pausen-Timer (endzeitbasiert, funktioniert auch nach Hintergrund) ----
+function ensureAudio() {
+  try {
+    audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+    if (audioCtx.state === "suspended") audioCtx.resume();
+  } catch {}
+}
+function beep() {
+  try {
+    const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+    o.frequency.value = 880; g.gain.value = 0.2;
+    o.connect(g); g.connect(audioCtx.destination);
+    o.start(); o.stop(audioCtx.currentTime + 0.35);
+  } catch {}
+}
+function startTimer(sec, label) {
+  ensureAudio();
+  timer.end = Date.now() + sec * 1000; timer.total = sec; timer.label = label;
+  drawTimer();
+}
+function drawTimer() {
+  const el = $("#timer");
+  if (!timer.end) { el.hidden = true; return; }
+  const ms = timer.end - Date.now();
+  if (ms <= 0) {
+    timer.end = 0; el.hidden = true;
+    beep();
+    try { navigator.vibrate?.([250, 120, 250]); } catch {}
+    return;
+  }
+  el.hidden = false;
+  const s = Math.ceil(ms / 1000);
+  $("#tlabel").textContent = timer.label;
+  $("#tval").textContent = `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
+  $("#tbarfill").style.width = (ms / (timer.total * 1000) * 100).toFixed(2) + "%";
+}
+
+// ---- Rendering ----
+function exerciseHtml(ex, i, sp) {
+  const sets = setsOf(S.active, ex);
+  const dn = sets.filter(s => s.done).length, total = sets.length;
+  const complete = total > 0 && dn === total;
+  const open = i === S.openIdx;
+  const head = `<button class="exhead" type="button" data-act="open" data-i="${i}" aria-expanded="${open}">
+      <span class="dot ${complete ? "ok" : dn ? "part" : ""}"></span>
+      <span class="exname">${esc(ex.name)}<small>${planText(ex)}</small></span>
+      <span class="exmeta num">${dn}/${total}</span></button>`;
+  if (!open) return `<li class="ex">${head}</li>`;
+  const rows = sets.map((s, j) => `
+      <div class="setrow">
+        <span class="setno">${j + 1}</span>
+        <input type="text" inputmode="decimal" aria-label="Gewicht in kg, Satz ${j + 1}" value="${fmtNum(s.kg)}" data-f="kg" data-i="${i}" data-j="${j}">
+        <input type="text" inputmode="numeric" aria-label="Wiederholungen, Satz ${j + 1}" value="${fmtNum(s.reps)}" data-f="reps" data-i="${i}" data-j="${j}">
+        <button class="check ${s.done ? "on" : ""}" type="button" data-act="done" data-i="${i}" data-j="${j}" aria-pressed="${s.done}" aria-label="Satz ${j + 1} erledigt">✓</button>
+        <button class="del" type="button" data-act="del" data-i="${i}" data-j="${j}" aria-label="Satz ${j + 1} entfernen">×</button>
+      </div>`).join("");
+  const last = i === sp.ex.length - 1;
+  return `<li class="ex">${head}
+    <div class="exbody">
+      <div class="sethead"><span></span><span>kg</span><span>Wdh</span><span></span><span></span></div>
+      ${rows}
+      <div class="exfoot">
+        <button class="ghost" type="button" data-act="add" data-i="${i}">+ Satz</button>
+        ${last ? "" : `<button class="primary" type="button" data-act="next" data-i="${i}">Nächste Übung →</button>`}
+      </div>
+    </div></li>`;
+}
+
+function render() {
+  const sp = splitById(S.splitId);
+  const today = new Date();
+  $("#today").textContent = today.toLocaleDateString("de-DE", { weekday: "long", day: "numeric", month: "long" });
+  $("#restLabel").textContent = S.rest + " s";
+  $("#restChips").innerHTML = REST_OPTIONS.map(r => `<button class="chip num" type="button" data-act="rest" data-r="${r}" aria-pressed="${r === S.rest}">${r} s</button>`).join("");
+
+  const sugg = !S.active ? suggestSplit() : null;
+  $("#splits").innerHTML = SPLITS.map(s => `
+    <button class="split" type="button" data-act="split" data-id="${s.id}" aria-pressed="${s.id === S.splitId}"
+      ${S.active && S.active.split !== s.id ? "disabled" : ""}>
+      ${sugg === s.id ? '<span class="badge">Vorschlag</span>' : ""}
+      <b>Tag ${s.id}</b><small>${s.short}</small>
+    </button>`).join("");
+
+  let html = "";
+  if (!S.active) {
+    if (S.lastSummary) {
+      html += `<div class="summary"><b>Training gespeichert.</b> ${S.lastSummary.sets} Sätze, ${Math.round(S.lastSummary.vol).toLocaleString("de-DE")} kg Volumen.</div>`;
+    }
+    html += `<div class="card">
+      <div><div class="eyebrow">Plan</div><h2>${esc(sp.name)}</h2></div>
+      <ul class="plan">${sp.ex.map(ex => `<li><span>${esc(ex.name)}</span><span>${planText(ex)}</span></li>`).join("")}</ul>
+      <button class="primary" type="button" data-act="start">Training starten</button>
+    </div>`;
+  } else {
+    const sess = S.active;
+    const all = sp.ex.flatMap(ex => setsOf(sess, ex));
+    const dn = all.filter(s => s.done).length;
+    html += `<div class="card" style="gap:10px">
+      <div class="row" style="justify-content:space-between;align-items:baseline">
+        <div><div class="eyebrow">Laufendes Training</div><h2>${esc(sp.name)}</h2></div>
+        <div class="num" style="color:var(--muted)">${dn}/${all.length} Sätze</div>
+      </div>
+      <div class="progress" aria-hidden="true"><i style="width:${all.length ? (dn / all.length * 100).toFixed(1) : 0}%"></i></div>
+    </div>`;
+    html += `<ul class="exlist">${sp.ex.map((ex, i) => exerciseHtml(ex, i, sp)).join("")}</ul>`;
+    html += `<button class="${S.finishArmed ? "primary" : "ghost"}" type="button" data-act="finish" style="width:100%">
+      ${S.finishArmed ? "Sicher? Nochmal tippen zum Beenden" : "Training beenden"}</button>`;
+  }
+  $("#session").innerHTML = html;
+
+  const done = S.sessions.filter(s => s.finishedAt).slice(0, 6);
+  $("#hist").innerHTML = done.length ? done.map(s => `
+      <li><span>${esc(splitById(s.split).short)}</span><span class="num">${Math.round(volume(s)).toLocaleString("de-DE")} kg</span>
+      <small>${new Date(s.startedAt).toLocaleDateString("de-DE", { weekday: "short", day: "numeric", month: "short" })}</small>
+      <small class="num">${Object.values(s.exercises).flatMap(e => e.sets).filter(x => x.done).length} Sätze</small></li>`).join("")
+    : `<li><small>Noch keine abgeschlossenen Trainings.</small></li>`;
+}
+
+// ---- Events (Delegation, damit Eingaben den Fokus behalten) ----
+document.addEventListener("click", e => {
+  const btn = e.target.closest("[data-act]");
+  if (!btn) return;
+  const act = btn.dataset.act, i = Number(btn.dataset.i), j = Number(btn.dataset.j);
+  const sp = splitById(S.splitId);
+  switch (act) {
+    case "split": if (!S.active) { S.splitId = Number(btn.dataset.id); S.openIdx = 0; S.lastSummary = null; render(); } break;
+    case "start": startSession(); break;
+    case "open": S.openIdx = S.openIdx === i ? -1 : i; render(); break;
+    case "done": {
+      const sets = setsOf(S.active, sp.ex[i]);
+      sets[j].done = !sets[j].done;
+      if (sets[j].done && j < sets.length - 1) startTimer(S.rest, "Pause · nach Satz " + (j + 1));
+      scheduleSave(S.active); render(); break;
+    }
+    case "add": {
+      const sets = setsOf(S.active, sp.ex[i]);
+      const last = sets[sets.length - 1] || {};
+      sets.push({ kg: last.kg ?? null, reps: last.reps ?? null, done: false });
+      scheduleSave(S.active); render(); break;
+    }
+    case "del": {
+      const sets = setsOf(S.active, sp.ex[i]);
+      if (sets.length > 1) { sets.splice(j, 1); scheduleSave(S.active); render(); }
+      break;
+    }
+    case "next":
+      S.openIdx = i + 1;
+      startTimer(120, "Pause · nächste Übung");
+      render(); break;
+    case "finish": finishSession(); break;
+    case "rest": S.rest = Number(btn.dataset.r); try { localStorage.setItem(LS_REST, S.rest); } catch {} render(); break;
+    case "t-add": if (timer.end) { timer.end += 30000; timer.total += 30; drawTimer(); } break;
+    case "t-stop": timer.end = 0; drawTimer(); break;
+  }
+});
+document.addEventListener("input", e => {
+  const f = e.target.dataset?.f;
+  if (!f || !S.active) return;
+  const i = Number(e.target.dataset.i), j = Number(e.target.dataset.j);
+  const set = setsOf(S.active, splitById(S.splitId).ex[i])[j];
+  set[f] = f === "kg" ? parseKg(e.target.value) : parseReps(e.target.value);
+  scheduleSave(S.active);
+});
+
+// ---- Start ----
+async function init() {
+  try { S.rest = Number(localStorage.getItem(LS_REST)) || 90; } catch {}
+  setInterval(drawTimer, 250);
+  render();
+
+  // Datenbank und Nutzer-ID kommen asynchron; ohne sie läuft die App lokal weiter.
+  try {
+    const [db, user] = await Promise.all([
+      window.claude?.use ? window.claude.use("db") : null,
+      window.claude?.use ? window.claude.use("user") : null,
+    ]);
+    if (db && user) {
+      const uid = await user.id();
+      if (uid) { S.db = db; S.uid = uid; S.backend = "db"; }
+    }
+  } catch {}
+
+  try { S.sessions = await loadSessions(); } catch { S.sessions = []; setStatus("Laden fehlgeschlagen"); }
+  S.active = S.sessions.find(s => !s.finishedAt) || null;
+  if (S.active) { S.splitId = S.active.split; S.openIdx = firstOpenIdx(S.active, splitById(S.splitId)); }
+  else S.splitId = suggestSplit();
+  setStatus(S.backend === "db" ? "" : "nur auf diesem Gerät");
+  render();
+}
+init();
+</script>
+</body>
+</html>
