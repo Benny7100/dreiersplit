@@ -34,6 +34,7 @@
 }
 
 html { padding-top: env(safe-area-inset-top, 0px); }
+[hidden] { display: none !important; }
 body {
   margin: 0; background: var(--bg); color: var(--fg);
   font: 15px/1.5 "IBM Plex Sans", system-ui, -apple-system, sans-serif;
@@ -103,7 +104,10 @@ input[type="date"] { min-height: 40px; background: var(--surface-2); border: 1px
 .dot.ok { background: var(--ok); border-color: var(--ok); }
 .exname { font-weight: 600; min-width: 0; overflow-wrap: anywhere; }
 .exname small { display: block; font-weight: 400; font-size: 13px; color: var(--muted); }
-.exname .sum { color: var(--fg); font-weight: 500; }
+.exname .sum { color: var(--fg); font-weight: 600; font-size: 16px; }
+.exname small.last { color: var(--muted); }
+.sugg { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 12px; background: var(--surface-2); border: 1px dashed var(--accent); }
+.sugg b { color: var(--accent); }
 .bump { display: inline-block; margin-left: 6px; font-size: 11px; letter-spacing: .04em; padding: 1px 6px; border-radius: 999px; background: var(--accent); color: var(--accent-ink); font-weight: 600; }
 .exmeta { color: var(--muted); font-variant-numeric: tabular-nums; font-size: 14px; }
 .exbody { padding: 0 14px 14px; display: grid; gap: 10px; min-width: 0; }
@@ -115,8 +119,9 @@ input[type="date"] { min-height: 40px; background: var(--surface-2); border: 1px
 .check { height: 46px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface-2); color: var(--muted); font-size: 20px; font-weight: 700; }
 .check.on { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
 .del { height: 36px; background: none; border: 0; color: var(--muted); font-size: 22px; }
-.exfoot { display: flex; gap: 8px; flex-wrap: wrap; }
-.exfoot > * { flex: 1 1 0; min-width: 0; }
+.exfoot { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.exfoot > * { min-width: 0; white-space: nowrap; font-size: 14px; padding: 0 10px; }
+.exfoot > .primary { grid-column: 1 / -1; }
 
 .chips { display: flex; gap: 8px; flex-wrap: wrap; }
 .chip { min-height: 40px; padding: 0 14px; border-radius: 999px; background: var(--surface-2); border: 1px solid var(--line); }
@@ -295,7 +300,7 @@ function commit(sess) {
 
 // ---- Training ----
 function setsOf(sess, ex) {
-  if (!sess.exercises[ex.name]) sess.exercises[ex.name] = { sets: buildPrefill(ex, null).sets, bump: false };
+  if (!sess.exercises[ex.name]) sess.exercises[ex.name] = { sets: buildPrefill(ex, null) };
   return sess.exercises[ex.name].sets;
 }
 function lastFinishedSets(name) {
@@ -306,21 +311,27 @@ function lastFinishedSets(name) {
   }
   return null;
 }
-// Gewichtsvorschlag: alle Sätze geschafft und Ziel-Wdh erreicht -> nächstes Mal +2,5 kg.
+// Startwerte = letztes Training (oder Plan, wenn es noch keins gibt). Nichts wird automatisch erhöht.
 function buildPrefill(ex, prev) {
-  if (!prev) return { sets: Array.from({ length: ex.sets }, () => ({ kg: ex.kg, reps: ex.reps, done: false })), bump: false };
-  const hit = prev.every(s => s.done) && prev.every(s => s.reps != null && s.reps >= ex.reps) && prev.some(s => s.kg != null);
-  return {
-    sets: prev.map(p => ({ kg: p.kg == null ? null : (hit ? round1(p.kg + STEP) : p.kg), reps: p.reps, done: false })),
-    bump: hit,
-  };
+  if (!prev) return Array.from({ length: ex.sets }, () => ({ kg: ex.kg, reps: ex.reps, done: false }));
+  return prev.map(p => ({ kg: p.kg, reps: p.reps, done: false }));
+}
+// Vorschlag nur, wenn im letzten Training alle Sätze geschafft wurden und die Ziel-Wdh erreicht sind.
+// Er verschwindet, sobald das Gewicht geändert oder übernommen wurde.
+function suggestionFor(ex, prev, sets) {
+  if (!prev || !prev.length) return null;
+  const hit = prev.every(s => s.done) && prev.every(s => s.reps != null && s.reps >= ex.reps);
+  const kgs = prev.map(s => s.kg).filter(v => v != null);
+  if (!hit || !kgs.length) return null;
+  const prevKg = Math.max(...kgs);
+  const unchanged = sets.every(s => s.kg == null || s.kg === prevKg);
+  return unchanged ? round1(prevKg + STEP) : null;
 }
 function startSession() {
   const sp = curSplit();
   const sess = { id: newId(), split: sp.id, startedAt: Date.now(), date: todayStr(), finishedAt: null, updatedAt: Date.now(), exercises: {} };
   for (const ex of sp.ex) {
-    const { sets, bump } = buildPrefill(ex, lastFinishedSets(ex.name));
-    sess.exercises[ex.name] = { sets, bump };
+    sess.exercises[ex.name] = { sets: buildPrefill(ex, lastFinishedSets(ex.name)) };
   }
   S.sessions.unshift(sess);
   S.active = sess; S.openIdx = 0; S.lastSummary = null; S.dismissed = null;
@@ -350,6 +361,13 @@ function updateExHeader(i) {
   if (sum) sum.textContent = exSummary(sets);
   const cnt = document.querySelector(`[data-cnt="${i}"]`);
   if (cnt) cnt.textContent = `${sets.filter(s => s.done).length}/${sets.length}`;
+  const sg = document.querySelector(`[data-sugg="${i}"]`);
+  if (sg) {
+    const v = suggestionFor(ex, lastFinishedSets(ex.name), sets);
+    sg.hidden = v == null;
+    const vt = sg.querySelector("[data-suggval]");
+    if (vt && v != null) vt.textContent = fmtKg(v);
+  }
   const dot = document.querySelector(`[data-dot="${i}"]`);
   if (dot) {
     const dn = sets.filter(s => s.done).length;
@@ -471,15 +489,17 @@ function volumeChart() {
 // ---- Render: Training ----
 function exerciseHtml(ex, i, sp) {
   const sess = S.active;
-  const data = sess.exercises[ex.name];
   const sets = setsOf(sess, ex);
+  const prev = lastFinishedSets(ex.name);
   const dn = sets.filter(s => s.done).length;
   const complete = sets.length > 0 && dn === sets.length;
   const open = i === S.openIdx;
+  const lastTxt = prev ? exSummary(prev) : `noch kein Wert · Plan ${planText(ex)}`;
   const head = `<button class="exhead" type="button" data-act="open" data-i="${i}" aria-expanded="${open}">
       <span class="dot ${complete ? "ok" : dn ? "part" : ""}" data-dot="${i}"></span>
-      <span class="exname">${esc(ex.name)}${data.bump ? '<span class="bump">+2,5 kg</span>' : ""}
-        <small><span class="sum" data-sum="${i}">${exSummary(sets)}</span> · Plan ${planText(ex)}</small></span>
+      <span class="exname"><span class="sum" data-sum="${i}">${exSummary(sets)}</span>
+        <small>${esc(ex.name)}</small>
+        <small class="last">Letztes Mal: ${lastTxt}</small></span>
       <span class="exmeta num" data-cnt="${i}">${dn}/${sets.length}</span></button>`;
   if (!open) return `<li class="ex">${head}</li>`;
   const rows = sets.map((s, j) => `
@@ -491,8 +511,13 @@ function exerciseHtml(ex, i, sp) {
         <button class="del" type="button" data-act="del" data-i="${i}" data-j="${j}" aria-label="Satz ${j + 1} entfernen">×</button>
       </div>`).join("");
   const last = i === sp.ex.length - 1;
+  const sugg = suggestionFor(ex, prev, sets);
   return `<li class="ex">${head}
     <div class="exbody">
+      <div class="sugg" data-sugg="${i}" ${sugg == null ? "hidden" : ""}>
+        <span>Vorschlag: <b class="num" data-suggval="${i}">${fmtKg(sugg)}</b></span>
+        <button class="ghost" type="button" data-act="apply" data-i="${i}">Übernehmen</button>
+      </div>
       <div class="sethead"><span></span><span>kg</span><span>Wdh</span><span></span><span></span></div>
       ${rows}
       <div class="exfoot">
@@ -703,6 +728,14 @@ document.addEventListener("click", e => {
       break;
     }
     case "next": S.openIdx = i + 1; startTimer(120, "Pause · nächste Übung"); render(); break;
+    case "apply": {
+      const ex = curSplit().ex[i];
+      const sets = setsOf(S.active, ex);
+      const v = suggestionFor(ex, lastFinishedSets(ex.name), sets);
+      if (v == null) break;
+      sets.forEach(s => { s.kg = v; });
+      commit(S.active); render(); break;
+    }
     case "restex": {
       const name = curSplit().ex[i].name;
       const cur = restFor(name);
